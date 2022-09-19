@@ -1,0 +1,21 @@
+.board {
+    max-width: 540px;
+    min-height: 540px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-gap: 10px;
+    background-color: blue;
+    
+}
+
+.node {
+    display:flex;
+    justify-content: space-between;
+    align-items: space-between;
+    background-color: grey;
+    background-size: contain;
+    background-position: center;
+    background-color: grey;   
+}

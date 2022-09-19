@@ -1,0 +1,88 @@
+basic reqs:
+
+Class objects
+players: Player objects are retrieved on input from [json]? file, defaults to player 1/2 (Does not save background scores, only live scores). Create some auth for these?
+	PROPERTIES 
+	name: (can be retrieved later to compare scores between different players), must be unique, default 1/2
+	tile: x/o
+	tileRef: is a ref to an image. default x/o. generated at game init, can be adjusted to any image ref and saved in player file
+	isPlayer: boolean. determines if it is an ai or player
+	
+	
+	potential additions to save scores
+
+	score dict: saves scores against other player names that have vsd previously
+	isDefault: default players are not saved. 
+	oppenents: when vs a new player object, add to this. Keep tack of scores here {name: (or direct ref to opponent objcet), myScore:, opponentScore:}, default is an ai opponent.
+	METHODS
+	pickMove (AI for, needs acces to board to choose a move)
+	save: add to JSON, trigger on win event. How to update only players that have played?
+		pull all player data, create all player objects, find player object by name, update that object, remkae full json file
+	
+
+NOT SURE IF I CAN WRITE TO A JSON FEIL FROM JAVASCRIPT so ignore player and score saving. Think you need node.js?
+
+Board:
+	PROPERTIES
+	size: int - min/default 3
+	nodes: the game squares - 0 - size^2-1
+	winLines: another object - used to iterate over and check if win line contains all same player object
+	METHOD
+	addNodes: makes and adds nodes to nodes prop
+	
+
+Nodes:	each square in the board
+	PROPERTEIS
+	id: 0 - size^2-1
+	contains: (empty (null)?, player objects)
+	METHODS
+	eventListener: listen for click event, check for contains, check for player is current player, take current player.tile, set backgrond, set contains. this is a bit strange, game flow will be partially controlled within node method
+
+Game Funcitons.
+
+GenerateBoard: create board object, make board grid of size n^2, add to DOM grid
+
+
+
+
+checkForWin: triggered on three in a row, how to check for win? Iterate on nodes?
+		iterate over boards win lines
+		increment player score, update player object (check/add opponent to opponents list, will need to update both player objects in this case)
+
+
+createPlayers: makes player object absed on JSON ref, or if not existing creates new.
+		on game load defaults to isDefault: True,
+		takes a JSON input pulled from name input if it exists.
+
+
+game flow.
+
+	init game>generateBoard, createPlayers
+	click listener> all main game flow triggered by node click
+		check if is players turn (how to save this. Globally? sure) //second thought this isnt actualy two player, no need to check
+		if not, do nothing
+		if is, check if square is available
+		if not, do nothing
+		if is, update node, check for win
+		if not win, 
+			change player turn
+			update properties of node object
+		if win,
+			animate the line of win
+			display win message
+			update player score object
+			display new player scores
+			click to continue
+			generateBoard
+			
+					
+DOM.
+	DOM needs access to board object, player objects (scores, names, images).
+	
+HTML
+	nodes are added to a grid element, board has fixed size, nodes scale to fit. the node grid lines will need to be dynamic depeneing on size
+	A nested for loop interating over rows and columns wil be able to add them to the correct location
+
+
+
+	
