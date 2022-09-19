@@ -28,12 +28,12 @@ class Node {
 
         nodeDiv.addEventListener('click',()=>{
             console.log('=================================')
-            console.log(players[turnIndex].isComputer)
+            // console.log(players[turnIndex].isComputer)
             if (!players[turnIndex].isComputer) {
                 move(players[turnIndex],this)
             }
             if (players[turnIndex].isComputer) {
-                computerMove()
+                setTimeout(computerMove,500)
             }
         })
 
@@ -165,10 +165,10 @@ const checkWin = (player,node) => {
 
     const longestLine = Math.max(rowCount,colCount,leftDiagCount,rightDiagCount)
     if (longestLine===parseInt(size)) {
-        console.log('win')
+        // console.log('win')
         return 'win'
     } else if (totalCount===nodeList.length) {
-        console.log('draw')
+        // console.log('draw')
         return 'draw'
     }
 
@@ -186,14 +186,14 @@ const showWin = (player,node) => {
 }
 
 const showDraw = () => {
-
+    showWin(1,1)
 }
 
 
 
 //=============================================Game flow=============================================//
 
-let players=[new Player('jack','x','img/x.png',false),new Player('jill','o','img/o.png',false)] //add players to this
+let players=[new Player('jack','x','img/x.png',false),new Player('jill','o','img/o.png',true)] //add players to this
 let turnIndex = 0
 let nodeList= []
 let winLines = {
@@ -229,13 +229,17 @@ document.querySelector('#continue').addEventListener('click',()=>{
 
 const computerMove = () => {
     //depth search for outcomes, build scores based on result
-
     computerSymbol = players[turnIndex].symbol
-    const gameState = nodeList.map((node)=>{
-        return node.symbol
-    })
-    const playerState = turnIndex
-    
+    const getGameState = () => {
+        return nodeList.map((node) => {
+            return node.symbol 
+        })
+
+    }
+
+    const initGameState = getGameState()
+    const initPlayerState = turnIndex
+    console.log(initGameState)    
     const loadGameState = (state,pstate) => {
         let i = 0
         for (symbol of state) {
@@ -259,12 +263,36 @@ const computerMove = () => {
         }
     }
     
-    
+    const getMaxIndex = (arr) => {
+        let maxIndex = 0
+        let max = -Infinity
+        let count=0
+        arr.forEach((e) => {
+            if (e>max) {
+                max=e
+                maxIndex=count
+            }
+            count++
+        })
+        return maxIndex
+    }
 
-    console.log(gameState)
-    console.log(nodeList)
-    
-    let somehting = getMove(gameState,playerState)
+    const getMinIndex = (arr) => {
+        let minIndex = 0
+        let min = Infinity
+        let count=0
+        arr.forEach((e) => {
+            if (e<min) {
+                min=e
+                minIndex=count
+            }
+            count++
+        })
+        return minIndex
+    }
+
+    let choice='a'
+
 
     const getMove = (gameState,playerState) => {
         const scores = []
@@ -275,20 +303,36 @@ const computerMove = () => {
             //dummy change node list
             if (node.symbol===null) {
                 node.symbol=currentPlayer.symbol
-                if (getScore(currentPlayer,node)!==0){
+                if (getScore(currentPlayer,node)!==0){ //means a win/loss/draw result occured
+                    choice = node //cathces the case where only one move is possible
                     return getScore(currentPlayer,node)
                 }
+            scores.push(getMove(getGameState(),Math.abs(playerState-1)))
+            moves.push(node)
             }
-            scores.push(getMove)
+        }
+        loadGameState(initGameState,initPlayerState)
+        if (currentPlayer.isComputer) {
+            maxScoreIndex = getMaxIndex(scores)
+            // console.log('max score',getMaxIndex(scores),' scores',scores)
+            // console.log(moves,maxScoreIndex)
+            choice = moves[maxScoreIndex]
+            return scores[maxScoreIndex]
+        } else {
+            minScoreIndex = getMinIndex(scores)
+            // console.log('min score',getMinIndex(scores),' scores',scores)
+            // console.log(moves,minScoreIndex)
+            choice = moves[minScoreIndex]
+            return scores[minScoreIndex]
         }
     }
 
-
-
-    loadGameState(gameState,playerState)
-
-
-
+    getMove(initGameState,initPlayerState)
+    loadGameState(initGameState,initPlayerState)
+    console.log('make a move?')
+    console.log(choice)
+    console.log(players[turnIndex])
+    move(players[turnIndex],choice)
 }
 
 
