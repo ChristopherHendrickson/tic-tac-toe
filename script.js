@@ -1,13 +1,16 @@
 class Player {
-    constructor(name,symbol,symbolRef,isComputer) {
-        this.name=name
-        this.symbol=symbol
-        this.symbolRef=symbolRef
-        this.isComputer=isComputer
-        this.score=0
+    constructor(name,symbol,symbolRef,audioRef,isComputer) {
+        this.name = name
+        this.symbol = symbol
+        this.symbolRef = symbolRef
+        this.audio = new Audio(`aud/${symbol}.mp3`)
+        this.audio.volume = 0.4
+        this.isComputer = isComputer
+        this.score = 0
+
     }
     computerMove() {
-
+        //iterate over node list, find all nodes it can play in
     }
 }
 
@@ -97,10 +100,14 @@ const move = (player,node) => {
         nodeDiv = document.getElementById(node.id)
         nodeDiv.style.backgroundImage = `url(${player.symbolRef})`
         node.symbol = player.symbol
-
+        player.audio.play()
         turnIndex = Math.abs(turnIndex-1) //bounces between 1 and 0
-        if (checkWin(player,node)) {
-            showWin(player)
+        
+        if (checkWin(player,node)==='win') {
+            showWin(player,node)
+        }
+        if (checkWin(player,node)==='draw') {
+            showDraw()
         }
 
     }
@@ -118,7 +125,7 @@ const checkWin = (player,node) => {
     let colCount = 0
     let leftDiagCount = 0
     let rightDiagCount = 0
-    
+    let totalCount = 0
     console.log(node)
     for (n of row) {
         if (n.symbol===symbolToCheck) {
@@ -131,7 +138,6 @@ const checkWin = (player,node) => {
         }
     }
     if (node.isOnLeftDiag) { //only check diagonal win if clicked node was on a diagonal
-        console.log('finding diag')
         for (n of leftDiag) {
             if (n.symbol===symbolToCheck) {
                 leftDiagCount+=1
@@ -139,7 +145,6 @@ const checkWin = (player,node) => {
         }
     }
     if (node.isOnRightDiag) { //only check diagonal win if clicked node was on a diagonal
-        console.log('finding diag')
         for (n of rightDiag) {
             if (n.symbol===symbolToCheck) {
                 rightDiagCount+=1
@@ -147,21 +152,46 @@ const checkWin = (player,node) => {
         }
     }
 
+    for (n of nodeList) {
+        if (n.symbol !== null) {
+            totalCount+=1
+        }
+    }
+
     const longestLine = Math.max(rowCount,colCount,leftDiagCount,rightDiagCount)
     console.log(longestLine)
     console.log(size)
+    console.log(`total count: ${totalCount}` )
+    console.log(`size: ${nodeList.length}` )
     if (longestLine===parseInt(size)) {
-
-        console.log('win met')
-        return true
+        console.log('win')
+        return 'win'
+    } else if (totalCount===nodeList.length) {
+        console.log('draw')
+        return 'draw'
     }
-    return false
 
 }
 
-const showWin = (player) => {
+const showWin = (player,node) => {
+    //highlight winning lines
+    //display result overlay
+    //update player score
+    console.log('in win')
+    const overlay = document.querySelector('.outcomeOverlay')
+    const content = document.querySelector('.content')
+    overlay.classList.toggle('showOutcome')
+    content.classList.toggle('hideBoard')
+    document.querySelector('#continue').style.display='inline-block'
+}
+
+const showDraw = () => {
 
 }
+
+
+
+//=============================================Game flow=============================================//
 
 let players=[new Player('jack','x','img/x.png',false),new Player('jill','o','img/o.png',false)] //add players to this
 let turnIndex = 0
@@ -178,13 +208,22 @@ generateBoard(size)
 //generate board of size, default 3
 document.getElementById('sizeButton').addEventListener('click',()=>{
     size=document.getElementById('sizeInput').value
-    turnIndex = 0
-    if (size) {
-        generateBoard(size)
-    } else {
-        let size=3
-        generateBoard(size)
+    if (size>1) {
+        turnIndex = 0
+        
+        if (size) {
+            generateBoard(size)
+        } else {
+            let size=3
+            generateBoard(size)
+        }
     }
 })
 
 
+document.querySelector('#continue').addEventListener('click',()=>{
+    const overlay = document.querySelector('.outcomeOverlay')
+    const content = document.querySelector('.content')
+    overlay.classList.toggle('showOutcome')
+    content.classList.toggle('hideBoard')
+})
