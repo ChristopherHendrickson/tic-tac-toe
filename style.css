@@ -46,7 +46,7 @@ body {
 }
 
 .content {
-    transition:0.5s;
+    transition:s;
 }
 
 .showOutcome {

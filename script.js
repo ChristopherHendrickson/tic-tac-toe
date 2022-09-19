@@ -1,5 +1,5 @@
 class Player {
-    constructor(name,symbol,symbolRef,audioRef,isComputer) {
+    constructor(name,symbol,symbolRef,isComputer) {
         this.name = name
         this.symbol = symbol
         this.symbolRef = symbolRef
@@ -7,11 +7,8 @@ class Player {
         this.audio.volume = 0.4
         this.isComputer = isComputer
         this.score = 0
+    }
 
-    }
-    computerMove() {
-        //iterate over node list, find all nodes it can play in
-    }
 }
 
 
@@ -31,7 +28,13 @@ class Node {
 
         nodeDiv.addEventListener('click',()=>{
             console.log('=================================')
-            move(players[turnIndex],this)
+            console.log(players[turnIndex].isComputer)
+            if (!players[turnIndex].isComputer) {
+                move(players[turnIndex],this)
+            }
+            if (players[turnIndex].isComputer) {
+                computerMove()
+            }
         })
 
     }
@@ -45,6 +48,7 @@ const generateBoard = (size=3) => {
     const board = document.querySelector('.board')
     board.innerHTML=''
     frString = '1fr '.repeat(size)
+    nodeList=[]
     board.style.gridTemplateColumns = frString
     board.style.gridTemplateRows = frString
 
@@ -101,8 +105,10 @@ const move = (player,node) => {
         nodeDiv.style.backgroundImage = `url(${player.symbolRef})`
         node.symbol = player.symbol
         player.audio.play()
+        // computerMove()
+        // console.log('actual List')
+        // console.log(nodeList)
         turnIndex = Math.abs(turnIndex-1) //bounces between 1 and 0
-        
         if (checkWin(player,node)==='win') {
             showWin(player,node)
         }
@@ -126,7 +132,6 @@ const checkWin = (player,node) => {
     let leftDiagCount = 0
     let rightDiagCount = 0
     let totalCount = 0
-    console.log(node)
     for (n of row) {
         if (n.symbol===symbolToCheck) {
             rowCount+=1
@@ -159,10 +164,6 @@ const checkWin = (player,node) => {
     }
 
     const longestLine = Math.max(rowCount,colCount,leftDiagCount,rightDiagCount)
-    console.log(longestLine)
-    console.log(size)
-    console.log(`total count: ${totalCount}` )
-    console.log(`size: ${nodeList.length}` )
     if (longestLine===parseInt(size)) {
         console.log('win')
         return 'win'
@@ -177,7 +178,6 @@ const showWin = (player,node) => {
     //highlight winning lines
     //display result overlay
     //update player score
-    console.log('in win')
     const overlay = document.querySelector('.outcomeOverlay')
     const content = document.querySelector('.content')
     overlay.classList.toggle('showOutcome')
@@ -201,20 +201,19 @@ let winLines = {
     winCols: {},
     winDiags: {},
 }
-
 let size=3
 
-generateBoard(size)
+generateBoard(size)//generates on load
+
+
+
 //generate board of size, default 3
-document.getElementById('sizeButton').addEventListener('click',()=>{
-    size=document.getElementById('sizeInput').value
-    if (size>1) {
-        turnIndex = 0
-        
-        if (size) {
-            generateBoard(size)
-        } else {
-            let size=3
+document.getElementById('sizeInput').addEventListener('click',(e)=>{
+    let newSize = document.getElementById('sizeInput').value
+    if (size!==newSize) {
+        size=newSize
+        if (size>1) {
+            turnIndex = 0
             generateBoard(size)
         }
     }
@@ -227,3 +226,72 @@ document.querySelector('#continue').addEventListener('click',()=>{
     overlay.classList.toggle('showOutcome')
     content.classList.toggle('hideBoard')
 })
+
+const computerMove = () => {
+    //depth search for outcomes, build scores based on result
+
+    computerSymbol = players[turnIndex].symbol
+    const gameState = nodeList.map((node)=>{
+        return node.symbol
+    })
+    const playerState = turnIndex
+    
+    const loadGameState = (state,pstate) => {
+        let i = 0
+        for (symbol of state) {
+            nodeList[i].symbol = symbol
+            i++
+        }
+        playerIndex = pstate
+    }
+    
+    const getScore = (player,node) => {
+        if (checkWin(player,node)==='win') {
+            if (player.isComputer) {
+                return 10
+            } else {
+                return -10
+            }
+        } else if (checkWin(player,node)==='draw') {
+            return 1 
+        } else {
+            return 0
+        }
+    }
+    
+    
+
+    console.log(gameState)
+    console.log(nodeList)
+    
+    let somehting = getMove(gameState,playerState)
+
+    const getMove = (gameState,playerState) => {
+        const scores = []
+        const moves = []
+        currentPlayer = players[playerState]
+        for (node of nodeList) {
+            loadGameState(gameState,playerState)
+            //dummy change node list
+            if (node.symbol===null) {
+                node.symbol=currentPlayer.symbol
+                if (getScore(currentPlayer,node)!==0){
+                    return getScore(currentPlayer,node)
+                }
+            }
+            scores.push(getMove)
+        }
+    }
+
+
+
+    loadGameState(gameState,playerState)
+
+
+
+}
+
+
+
+
+
