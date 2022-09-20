@@ -8,6 +8,7 @@ class Player {
         this.isComputer = isComputer
         this.difficulty = difficulty
         this.score = 0
+        this.avatar = `img/${this.name}.png`
     }
 
 }
@@ -33,7 +34,7 @@ class Node {
             }
             if (result!=='win') {
                 if (players[turnIndex].isComputer) {
-                    setTimeout(computerMove,0)
+                    setTimeout(computerMove,200)
                 }
             }
         }
@@ -236,7 +237,7 @@ const computerMove = () => {
                 max=e
                 maxIndex=count
             } else if (e===max) { // add some randomness
-                maxIndex = Math.random()>Math.random() ? maxIndex : count
+                maxIndex = Math.random()>0.1 ? maxIndex : count
             }
             count++
         })
@@ -252,7 +253,7 @@ const computerMove = () => {
                 min=e
                 minIndex=count
             } else if (e===min) { // add some randomness
-                minIndex = Math.random()>Math.random() ? minIndex : count
+                minIndex = Math.random()>0.1 ? minIndex : count
             }
             count++
         })
@@ -273,7 +274,8 @@ const computerMove = () => {
 
         if (countNullNodes(gameState)>initPlayer.difficulty) { //this code is implemented to reduce bot runtimes at large board sizes
             //depth can be adjusted as a difficulty. bot plays randomly unitl there are 'difficulty' no. of unfilled squres remainng. (i.e 9=full depth in 3x3, 0 = full random)
-            let randomChoice = Math.floor(Math.random()*nodeList.length) 
+            console.log('choice was random')
+            let randomChoice = Math.floor(Math.random()*nodeList.length)
             do {
                 randomChoice = Math.floor(Math.random()*nodeList.length)
                 choice = nodeList[randomChoice]
@@ -290,10 +292,11 @@ const computerMove = () => {
             if (!(memoKey in memo)) {
                 const scores = []
                 const moves = []
+                let node
                 const currentPlayer = players[playerState]
                 for (let i = 0; i < nodeList.length ; i++) {
                     loadGameState(gameState,playerState)
-                    let node = nodeList[i]
+                    node = nodeList[i]
                     if (node.symbol===null) {
                         node.symbol=currentPlayer.symbol
                         if (getScore(currentPlayer,node)!==0) { 
@@ -310,18 +313,21 @@ const computerMove = () => {
                 if (currentPlayer===players[initPlayerIndex]) {
                     maxScoreIndex = getMaxIndex(scores)
                     choice = moves[maxScoreIndex]
-                    memo[memoKey]=[choice,scores[maxScoreIndex]]
-                    return (memo[memoKey][1]+scores.reduce((a, b) => a + b) / scores.length**2)*0.9
+                    memo[memoKey]=[choice,(scores[maxScoreIndex]+scores.reduce((a, b) => a + b,0) / scores.length**3)*0.9] 
+                    // in the above, *0.9 encourages the bot to prolong losses and take faster wins, by reducing the impact of deeper recursive calls.  
+                    //by adding a portion of the average result to the final score (the reduce function), the bot favours moves that have more winning outcomes even if they are technically draws/losses against a perfect opponent. This makes the bot more aggresively try get three in a row
+                    return memo[memoKey][1]
                 } else {
                     minScoreIndex = getMinIndex(scores)
                     choice = moves[minScoreIndex]
-                    memo[memoKey]=[choice,scores[minScoreIndex]]
-                    return (memo[memoKey][1]+scores.reduce((a, b) => a + b) / scores.length**2)*0.9
+                    memo[memoKey]=[choice,(scores[minScoreIndex]+scores.reduce((a, b) => a + b,0) / scores.length**3)*0.9]
+                    return memo[memoKey][1]
+
                 }
             } else {
                 choice = memo[memoKey][0]
                 // console.log(Object.keys(memo).length)
-                return memo[memoKey][1]*0.9
+                return memo[memoKey][1]
             }
         }
     }
@@ -335,21 +341,22 @@ const computerMove = () => {
     loadGameState(initGameState,initPlayerIndex)
     console.log(turnIndex)
     console.log(players[turnIndex].name)
+    console.log(players[turnIndex].difficulty)
     move(players[turnIndex],choice)
 }
 
 
 const createBots = (side) => {
     const symbol = side === 'left' ? 'x':'o'
-    const botList = []
-    botList.push(new Player('Philip',symbol,`img/${symbol}.png`,true,0))
-    botList.push(new Player('Laika',symbol,`img/${symbol}.png`,true,5))
-    botList.push(new Player('Burke',symbol,`img/${symbol}.png`,true,13))
+    const botList = {}
+    botList['Philip']=(new Player('Philip',symbol,`img/${symbol}.png`,true,0))
+    botList['Laika']=(new Player('Laika',symbol,`img/${symbol}.png`,true,7))
+    botList['Burke']=(new Player('Burke',symbol,`img/${symbol}.png`,true,13))
     
     const htmlSelect = document.querySelector(`#${side}BotList`)
     let htmlOptions = ''
-    for (let i = 0; i<botList.length ; i++) {
-        htmlOptions+=`<option id="${botList[i].name}">${botList[i].name}</option>`
+    for (bot in botList) {
+        htmlOptions+=`<option id="${botList[bot].name}">${botList[bot].name}</option>`
     }
     htmlSelect.innerHTML=htmlOptions
     return botList
@@ -359,6 +366,25 @@ const createBots = (side) => {
 const updatePlayers = (player0,player1) => {
     players[0]=player0
     players[1]=player1
+    updatePlayerPanels()
+}
+
+const updatePlayerPanels = () => {
+    const leftimg = players[0].avatar
+    const rightimg = players[1].avatar
+    const leftName = players[0].name
+    const rightName = players[1].name
+    const leftDifficultyDescription = players[0].difficulty < 4 ? 'Novice' : players[0].difficulty < 7 ? 'Intermediate' : 'Undefeatable'
+    const rightDifficultyDescription = players[1].difficulty < 4 ? 'Novice' : players[1].difficulty < 7 ? 'Intermediate' : 'Undefeatable'
+    const leftScore = players[0].score
+    const rightScore = players[1].score
+
+    const leftPanel = document.querySelector('#leftPanel')
+    const rightPanel = document.querySelector('#rightPanel')
+
+    leftPanel.querySelector('img').setAttribute('src',leftimg)
+    rightPanel.querySelector('img').setAttribute('src',rightimg)
+
 }
 
 //=============================================Game flow=============================================//
@@ -372,31 +398,31 @@ const updatePlayers = (player0,player1) => {
 
 const leftBots = createBots('left')
 const rightBots = createBots('right')
-
-// <option value="bot1">bot1</option>
-
-
+const defaultLeft = new Player('Player 1','x','img/x.png',false)
+const defaultRight = new Player('Player 2','o','img/o.png',false)
 
 let players = {
-    0:new Player('jack','x','img/x.png',false,4),
-    1:new Player('jill','o','img/o.png',true,13)
+    '0':defaultLeft,
+    '1':defaultRight,
 }
 
-updatePlayers(leftBots[0],rightBots[2])
+updatePlayers(players[0],rightBots['Philip'])
 
 let turnIndex = 0
-let nodeList= []
+let nodeList = []
 let winLines = {
     winRows: {},
     winCols: {},
     winDiags: {},
 }
-let size=3
+let size = 3
 let memo = {}
 generateBoard(size)
 
 
 //EVENT LISTENERS
+
+
 
 //generate board of size, default 3
 document.getElementById('sizeInput').addEventListener('click',(e)=>{
@@ -426,21 +452,49 @@ document.querySelector('#continue').addEventListener('click',()=>{
 
 const leftBotSwitch = document.querySelector('#leftPanel input[type="checkbox"')
 const rightBotSwitch = document.querySelector('#rightPanel input[type="checkbox"')
-const leftBotList = document.querySelector('#leftBotList')
-const rightBotList = document.querySelector('#rightBotList')
+const leftBotSelect = document.querySelector('#leftBotList')
+const rightBotSelect = document.querySelector('#rightBotList')
+rightBotSelect.classList.toggle('vis')
+
 
 leftBotSwitch.addEventListener('click',(e)=>{
-    leftBotList.classList.toggle('vis')
+    leftBotSelect.classList.toggle('vis')
+    if (leftBotSwitch.checked) {
+        //means we are adding a bot
+        const botName = leftBotSelect.value
+        const leftPlayer = leftBots[botName]
+        console.log(leftPlayer)
+        updatePlayers(leftPlayer,players[1]) //retain Right hand player (players[1])
+    } else {
+        updatePlayers(defaultLeft,players[1])
+        //add default human player 1
+    }
 })
 
 rightBotSwitch.addEventListener('click',(e)=>{
-    rightBotList.classList.toggle('vis')
+    rightBotSelect.classList.toggle('vis')
+    if (rightBotSwitch.checked) {
+        //means we are adding a bot
+        const botName = rightBotSelect.value
+        const rightPlayer = rightBots[botName]
+        console.log(rightPlayer)
+        updatePlayers(players[0],rightPlayer) //retain Right hand player (players[1])
+    } else {
+        updatePlayers(players[0],defaultRight)
+        //add default human player 2
+    }
 })
 
-leftBotList.addEventListener('click',(e)=>{
-    console.log(e.target)
-    console.log(e.currentTarget)
-    console.log(e.target.value)
+leftBotSelect.addEventListener('click',(e)=>{
+    const botName = leftBotSelect.value
+    const leftPlayer = leftBots[botName]
+    updatePlayers(leftPlayer,players[1])
+})
+
+rightBotSelect.addEventListener('click',(e)=>{
+    const botName = rightBotSelect.value
+    const rightPlayer = rightBots[botName]
+    updatePlayers(players[0],rightPlayer)
 })
 
 
