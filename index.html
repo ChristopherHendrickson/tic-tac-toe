@@ -8,6 +8,9 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <script defer src='script.js'></script>
     <title>tic-tac-toe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Poiret+One&display=swap" rel="stylesheet">
 </head>
 <body>
     <nav>
@@ -16,50 +19,37 @@
     </nav>
     <section class="content">
         <div class="playerPanel" id="leftPanel">
+            <img src='img/left-default.png' class='avatar' id='leftavatar'/>
             <ul>
                 <li>name</li>
                 <li>icon</li>
                 <li>nasdasdsddsffdsd</li>
-                <li>
-                    <label class="switch">
-                        <input type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </li>
             </ul>
-            <ul>
-                <li>
-                    <select class="botList" id="leftBotList">
-                        <option value="bot1">bot1</option>
-                        <option value="bot2">bot2</option>
-                        <option value="bot3">bot3</option>
-                      </select>
-                </li>
-            </ul>
+            <p>Bot:</p>
+            <label class="switch">
+                <input type="checkbox">
+
+
+                <span class="slider"></span>
+            </label>
+            <select class="botList" id="leftBotList"></select>
+
 
         </div>
         <div class='board'></div>
         <div class="playerPanel" id="rightPanel">
+            <img src='img/right-default.png' class='avatar' id='rightavatar'/>
             <ul>
                 <li>name</li>
                 <li>icon</li>
                 <li>nasdasdsddsffdsd</li>
-                <li>
-                    <label class="switch">
-                        <input type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </li>
             </ul>
-            <ul>
-                <li>
-                    <select class="botList" id="rightBotList">
-                        <option value="bot1">bot1</option>
-                        <option value="bot2">bot2</option>
-                        <option value="bot3">bot3</option>
-                      </select>
-                </li>
-            </ul>
+            <label class="switch">
+                <input type="checkbox">
+                <span class="slider"></span>
+            </label>
+
+            <select class="botList" id="rightBotList"></select>
 
         </div>
         
@@ -75,6 +65,8 @@
         <br>
         <button id="continue">continue</button>
     </section>
-    
+    <article>
+
+    </article>
 </body>
 </html>

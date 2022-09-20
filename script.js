@@ -33,7 +33,7 @@ class Node {
             }
             if (result!=='win') {
                 if (players[turnIndex].isComputer) {
-                    setTimeout(computerMove,700)
+                    setTimeout(computerMove,0)
                 }
             }
         }
@@ -44,7 +44,8 @@ class Node {
 
 
 const generateBoard = (size=3) => {
-    
+    memo = {}
+    turnIndex = 0
     //adjust board grid to fit all the squares
     const board = document.querySelector('.board')
     board.innerHTML=''
@@ -196,8 +197,6 @@ const showDraw = () => {
 
 
 const computerMove = () => {
-
-    computerSymbol = players[turnIndex].symbol
     
     const getGameState = () => {
         return nodeList.map((node) => {
@@ -217,12 +216,12 @@ const computerMove = () => {
     const getScore = (player,node) => {
         if (checkWin(player,node)==='win') {
             if (player===players[initPlayerIndex]) {
-                return 10
+                return 100
             } else {
-                return -10
+                return -100
             }
         } else if (checkWin(player,node)==='draw') {
-            return 1 
+            return 10
         } else {
             return 0
         }
@@ -273,7 +272,7 @@ const computerMove = () => {
     const getMove = (gameState,playerState) => {
 
         if (countNullNodes(gameState)>initPlayer.difficulty) { //this code is implemented to reduce bot runtimes at large board sizes
-            //depth can be adjusted as a difficulty. bot plays randomly unitl there are 'difficulty' no. of squres remainng. (i.e 9=full depth in 3x3, 0 = full random)
+            //depth can be adjusted as a difficulty. bot plays randomly unitl there are 'difficulty' no. of unfilled squres remainng. (i.e 9=full depth in 3x3, 0 = full random)
             let randomChoice = Math.floor(Math.random()*nodeList.length) 
             do {
                 randomChoice = Math.floor(Math.random()*nodeList.length)
@@ -287,6 +286,7 @@ const computerMove = () => {
             gameState.forEach((e)=> {
                 memoKey+=e
             })
+            memoKey+=toString(initPlayer)
             if (!(memoKey in memo)) {
                 const scores = []
                 const moves = []
@@ -297,7 +297,7 @@ const computerMove = () => {
                     if (node.symbol===null) {
                         node.symbol=currentPlayer.symbol
                         if (getScore(currentPlayer,node)!==0) { 
-                            choice = node //catches the case where only one move is possible
+                            choice = node
                             memo[memoKey]=[choice,getScore(currentPlayer,node)]
                             
                             return getScore(currentPlayer,node)
@@ -311,17 +311,17 @@ const computerMove = () => {
                     maxScoreIndex = getMaxIndex(scores)
                     choice = moves[maxScoreIndex]
                     memo[memoKey]=[choice,scores[maxScoreIndex]]
-                    return memo[memoKey][1]
+                    return (memo[memoKey][1]+scores.reduce((a, b) => a + b) / scores.length**2)*0.9
                 } else {
                     minScoreIndex = getMinIndex(scores)
                     choice = moves[minScoreIndex]
                     memo[memoKey]=[choice,scores[minScoreIndex]]
-                    return memo[memoKey][1]
+                    return (memo[memoKey][1]+scores.reduce((a, b) => a + b) / scores.length**2)*0.9
                 }
             } else {
                 choice = memo[memoKey][0]
                 // console.log(Object.keys(memo).length)
-                return memo[memoKey][1]
+                return memo[memoKey][1]*0.9
             }
         }
     }
@@ -333,16 +333,57 @@ const computerMove = () => {
     getMove(initGameState,initPlayerIndex)
     console.log(choice)
     loadGameState(initGameState,initPlayerIndex)
+    console.log(turnIndex)
+    console.log(players[turnIndex].name)
     move(players[turnIndex],choice)
 }
 
 
+const createBots = (side) => {
+    const symbol = side === 'left' ? 'x':'o'
+    const botList = []
+    botList.push(new Player('Philip',symbol,`img/${symbol}.png`,true,0))
+    botList.push(new Player('Laika',symbol,`img/${symbol}.png`,true,5))
+    botList.push(new Player('Burke',symbol,`img/${symbol}.png`,true,13))
+    
+    const htmlSelect = document.querySelector(`#${side}BotList`)
+    let htmlOptions = ''
+    for (let i = 0; i<botList.length ; i++) {
+        htmlOptions+=`<option id="${botList[i].name}">${botList[i].name}</option>`
+    }
+    htmlSelect.innerHTML=htmlOptions
+    return botList
+}
+
+
+const updatePlayers = (player0,player1) => {
+    players[0]=player0
+    players[1]=player1
+}
+
 //=============================================Game flow=============================================//
 
-const botList = 1
 
 
-let players=[new Player('jack','x','img/x.png',false),new Player('jill','o','img/o.png',true,13)] //add players to this
+
+
+
+//GLOBALS
+
+const leftBots = createBots('left')
+const rightBots = createBots('right')
+
+// <option value="bot1">bot1</option>
+
+
+
+let players = {
+    0:new Player('jack','x','img/x.png',false,4),
+    1:new Player('jill','o','img/o.png',true,13)
+}
+
+updatePlayers(leftBots[0],rightBots[2])
+
 let turnIndex = 0
 let nodeList= []
 let winLines = {
@@ -352,9 +393,10 @@ let winLines = {
 }
 let size=3
 let memo = {}
-generateBoard(size)//generates on load
+generateBoard(size)
 
 
+//EVENT LISTENERS
 
 //generate board of size, default 3
 document.getElementById('sizeInput').addEventListener('click',(e)=>{
@@ -375,6 +417,7 @@ document.querySelector('#continue').addEventListener('click',()=>{
     const content = document.querySelector('.content')
     overlay.classList.toggle('showOutcome')
     content.classList.toggle('hideBoard')
+    generateBoard(size)
 })
 
 
