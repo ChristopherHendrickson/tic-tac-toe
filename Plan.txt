@@ -50,6 +50,8 @@ checkForWin: triggered on three in a row, how to check for win? Iterate on nodes
 		increment player score, update player object (check/add opponent to opponents list, will need to update both player objects in this case)
 
 
+
+
 createPlayers: makes player object absed on JSON ref, or if not existing creates new.
 		on game load defaults to isDefault: True,
 		takes a JSON input pulled from name input if it exists.
@@ -81,8 +83,17 @@ DOM.
 	
 HTML
 	nodes are added to a grid element, board has fixed size, nodes scale to fit. the node grid lines will need to be dynamic depeneing on size
-	A nested for loop interating over rows and columns wil be able to add them to the correct location
+	A nested for loop interating over rows and columns wil be able to add them to the correct location.
+
+	
 
 
+
+Goals for today. Fix bot for bigger grids, properly implementing memo might fix this
+Add a difficulty setting, with purely a blocker. and fully random. Should be able to adjust existing algorithm for a blocker only. Partially random on blocker, equal score weightings selecting randomly in getMin and get Max index functions.
+Implement a selectable 'in-a-row' win requirement for bigger games
+computers can fight eachother
+
+Implement the game and score saving
 
 	

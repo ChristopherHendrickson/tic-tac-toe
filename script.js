@@ -18,9 +18,7 @@ class Node {
         this.row=row
         this.col=col
         this.isOnLeftDiag = this.row === this.col ? true:false
-        this.isOnRightDiag = this.row+this.col === size-1 ? true:false
-        
-        
+        this.isOnRightDiag = this.row+this.col === size-1 ? true:false        
         this.symbol=null
     }
     addNodeListener() {
@@ -202,7 +200,7 @@ let winLines = {
     winDiags: {},
 }
 let size=3
-
+let memo = {}
 generateBoard(size)//generates on load
 
 
@@ -213,6 +211,7 @@ document.getElementById('sizeInput').addEventListener('click',(e)=>{
     if (size!==newSize) {
         size=newSize
         if (size>1) {
+            memo = {}
             turnIndex = 0
             generateBoard(size)
         }
@@ -227,25 +226,24 @@ document.querySelector('#continue').addEventListener('click',()=>{
     content.classList.toggle('hideBoard')
 })
 
+
+
+
+
 const computerMove = () => {
-    //depth search for outcomes, build scores based on result
+
     computerSymbol = players[turnIndex].symbol
     
     const getGameState = () => {
         return nodeList.map((node) => {
             return node.symbol 
         })
-
     }
 
-    const initGameState = getGameState()
-    const initPlayerState = turnIndex
-    // console.log(initGameState)    
     const loadGameState = (state,pstate) => {
         let i = 0
         for (symbol of state) {
             nodeList[i].symbol = symbol
-            // console.log('sym')
             i++
         }
         playerIndex = pstate
@@ -253,7 +251,7 @@ const computerMove = () => {
     
     const getScore = (player,node) => {
         if (checkWin(player,node)==='win') {
-            if (player.isComputer) {
+            if (player===players[initPlayerState]) {
                 return 10
             } else {
                 return -10
@@ -293,55 +291,53 @@ const computerMove = () => {
         return minIndex
     }
 
-    let choice
-    let counter=0
     const getMove = (gameState,playerState) => {
-        const scores = []
-        const moves = []
-        console.log(counter++)
-        const currentPlayer = players[playerState]
-        for (let i = 0; i < nodeList.length ; i++) {
-            loadGameState(gameState,playerState)
-            let nodeCur = nodeList[i]
-            if (nodeCur.symbol===null) {
-                // console.log(node.symbol)
-                nodeCur.symbol=currentPlayer.symbol
-                if (getScore(currentPlayer,nodeCur)!==0){ //means a win/loss/draw result occured
-
-                    choice = nodeCur //catches the case where only one move is possible
-                    // console.log('chose if',choice)
-                    return getScore(currentPlayer,nodeCur)
-                }
-  
-                const newScore = getMove(getGameState(),Math.abs(playerState-1))
-                // console.log(nodeCur,newScore,players[playerState].isComputer,nodeCur.symbol)
-                moves.push(nodeCur) 
-                scores.push(newScore)
-                
-                
+        let memoKey = ''
+        gameState.forEach((e)=> {
+            memoKey+=e
+        })
+        if (!(memoKey in memo)) {
+            const scores = []
+            const moves = []
+            const currentPlayer = players[playerState]
+            for (let i = 0; i < nodeList.length ; i++) {
+                loadGameState(gameState,playerState)
+                let node = nodeList[i]
+                if (node.symbol===null) {
+                    node.symbol=currentPlayer.symbol
+                    if (getScore(currentPlayer,node)!==0) { 
+                        choice = node //catches the case where only one move is possible
+                        memo[memoKey]=[choice,getScore(currentPlayer,node)]
+                        
+                        return getScore(currentPlayer,node)
+                    }
+    
+                    moves.push(node) 
+                    scores.push(getMove(getGameState(),Math.abs(playerState-1)))
+                } 
             } 
-        } 
-        // loadGameState(initGameState,initPlayerState)
-        if (currentPlayer.isComputer) {
-            maxScoreIndex = getMaxIndex(scores)
-            // console.log('max score',getMaxIndex(scores),' scores',scores)
-            // console.log(moves,maxScoreIndex)
-            choice = moves[maxScoreIndex]
-            // console.log('chose in max',choice)
-            // console.log('my Scores',scores)
-            return scores[maxScoreIndex]
+            if (currentPlayer===players[initPlayerState]) {
+                maxScoreIndex = getMaxIndex(scores)
+                choice = moves[maxScoreIndex]
+                memo[memoKey]=[choice,scores[maxScoreIndex]]
+                return memo[memoKey][1]
+            } else {
+                minScoreIndex = getMinIndex(scores)
+                choice = moves[minScoreIndex]
+                memo[memoKey]=[choice,scores[minScoreIndex]]
+                return memo[memoKey][1]
+            }
         } else {
-            minScoreIndex = getMinIndex(scores)
-            // console.log('min score',getMinIndex(scores),' scores',scores)
-            // console.log(moves,minScoreIndex)
-            choice = moves[minScoreIndex]
-            // console.log('chose in min',choice)
-            // console.log('enemy scores',scores,moves)
-
-            return scores[minScoreIndex]
+            choice = memo[memoKey][0]
+            console.log(Object.keys(memo).length)
+            return memo[memoKey][1]
         }
+
     }
 
+    const initGameState = getGameState()
+    const initPlayerState = turnIndex 
+    let choice
     getMove(initGameState,initPlayerState)
     loadGameState(initGameState,initPlayerState)
     move(players[turnIndex],choice)
