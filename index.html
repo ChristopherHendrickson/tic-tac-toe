@@ -10,12 +10,64 @@
     <title>tic-tac-toe</title>
 </head>
 <body>
-
-    <section class="content">
-    <h1>Tic Tac Toe</h1>
+    <nav>
+        NAV 
         <input id='sizeInput' type="number" value=3 min=2 max=20>
+    </nav>
+    <section class="content">
+        <div class="playerPanel" id="leftPanel">
+            <ul>
+                <li>name</li>
+                <li>icon</li>
+                <li>nasdasdsddsffdsd</li>
+                <li>
+                    <label class="switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <select class="botList" id="leftBotList">
+                        <option value="bot1">bot1</option>
+                        <option value="bot2">bot2</option>
+                        <option value="bot3">bot3</option>
+                      </select>
+                </li>
+            </ul>
 
-    <div class='board'></div>
+        </div>
+        <div class='board'></div>
+        <div class="playerPanel" id="rightPanel">
+            <ul>
+                <li>name</li>
+                <li>icon</li>
+                <li>nasdasdsddsffdsd</li>
+                <li>
+                    <label class="switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <select class="botList" id="rightBotList">
+                        <option value="bot1">bot1</option>
+                        <option value="bot2">bot2</option>
+                        <option value="bot3">bot3</option>
+                      </select>
+                </li>
+            </ul>
+
+        </div>
+        
+        <div class="scoreBar">
+            <span>SCORE</span>
+            <span>SCORE</span>
+        </div>
+        
     </section>
 
     <section class='outcomeOverlay'>

@@ -1,11 +1,12 @@
 class Player {
-    constructor(name,symbol,symbolRef,isComputer) {
+    constructor(name,symbol,symbolRef,isComputer,difficulty=9) {
         this.name = name
         this.symbol = symbol
         this.symbolRef = symbolRef
         this.audio = new Audio(`aud/${symbol}.mp3`)
         this.audio.volume = 0.4
         this.isComputer = isComputer
+        this.difficulty = difficulty
         this.score = 0
     }
 
@@ -23,18 +24,20 @@ class Node {
     }
     addNodeListener() {
         const nodeDiv = document.querySelector('#'+this.id)
-
-        nodeDiv.addEventListener('click',()=>{
+        const listenerFunction = ()=>{
             console.log('=================================')
             // console.log(players[turnIndex].isComputer)
+            let result
             if (!players[turnIndex].isComputer) {
-                move(players[turnIndex],this)
+                result = move(players[turnIndex],this)
             }
-            if (players[turnIndex].isComputer) {
-                setTimeout(computerMove,500)
+            if (result!=='win') {
+                if (players[turnIndex].isComputer) {
+                    setTimeout(computerMove,700)
+                }
             }
-        })
-
+        }
+        nodeDiv.addEventListener('click',listenerFunction)
     }
 }
 
@@ -50,7 +53,7 @@ const generateBoard = (size=3) => {
     board.style.gridTemplateColumns = frString
     board.style.gridTemplateRows = frString
 
-    //add lits to the winLines to for all rows and cols
+    //add lits to the winLines for all rows and cols
     //first, reset winLines
     winLines = {
         winRows: {},
@@ -67,7 +70,7 @@ const generateBoard = (size=3) => {
     //always only 2 diag win lines
     winLines.winDiags.left=[]
     winLines.winDiags.right=[]
-
+    //add nodes to the win line lists
     for (let row=0;row<size;row++) {
 
         for (let col=0;col<size;col++) {
@@ -107,11 +110,14 @@ const move = (player,node) => {
         // console.log('actual List')
         // console.log(nodeList)
         turnIndex = Math.abs(turnIndex-1) //bounces between 1 and 0
-        if (checkWin(player,node)==='win') {
+        const result = checkWin(player,node)
+        if (result === 'win') {
             showWin(player,node)
+            return result
         }
-        if (checkWin(player,node)==='draw') {
+        if (result ==='draw') {
             showDraw()
+            return result
         }
 
     }
@@ -176,6 +182,7 @@ const showWin = (player,node) => {
     //highlight winning lines
     //display result overlay
     //update player score
+    //update local storage for player object
     const overlay = document.querySelector('.outcomeOverlay')
     const content = document.querySelector('.content')
     overlay.classList.toggle('showOutcome')
@@ -188,10 +195,154 @@ const showDraw = () => {
 }
 
 
+const computerMove = () => {
+
+    computerSymbol = players[turnIndex].symbol
+    
+    const getGameState = () => {
+        return nodeList.map((node) => {
+            return node.symbol 
+        })
+    }
+
+    const loadGameState = (state,pstate) => {
+        let i = 0
+        for (symbol of state) {
+            nodeList[i].symbol = symbol
+            i++
+        }
+        playerIndex = pstate
+    }
+    
+    const getScore = (player,node) => {
+        if (checkWin(player,node)==='win') {
+            if (player===players[initPlayerIndex]) {
+                return 10
+            } else {
+                return -10
+            }
+        } else if (checkWin(player,node)==='draw') {
+            return 1 
+        } else {
+            return 0
+        }
+    }
+    
+    const getMaxIndex = (arr) => {
+        let maxIndex = 0
+        let max = -Infinity
+        let count=0
+        arr.forEach((e) => {
+            if (e>max) {
+                max=e
+                maxIndex=count
+            } else if (e===max) { // add some randomness
+                maxIndex = Math.random()>Math.random() ? maxIndex : count
+            }
+            count++
+        })
+        return maxIndex
+    }
+
+    const getMinIndex = (arr) => {
+        let minIndex = 0
+        let min = Infinity
+        let count=0
+        arr.forEach((e) => {
+            if (e<min) {
+                min=e
+                minIndex=count
+            } else if (e===min) { // add some randomness
+                minIndex = Math.random()>Math.random() ? minIndex : count
+            }
+            count++
+        })
+        return minIndex
+    }
+
+    const countNullNodes = (arr) => {
+        let count=0
+        arr.forEach((e)=>{
+            if (e===null) {
+                count+=1
+            }
+        })
+        return count
+    }
+
+    const getMove = (gameState,playerState) => {
+
+        if (countNullNodes(gameState)>initPlayer.difficulty) { //this code is implemented to reduce bot runtimes at large board sizes
+            //depth can be adjusted as a difficulty. bot plays randomly unitl there are 'difficulty' no. of squres remainng. (i.e 9=full depth in 3x3, 0 = full random)
+            let randomChoice = Math.floor(Math.random()*nodeList.length) 
+            do {
+                randomChoice = Math.floor(Math.random()*nodeList.length)
+                choice = nodeList[randomChoice]
+            } while (nodeList[randomChoice].symbol!==null)
+
+        } else {
+
+            // console.log(gameState)
+            let memoKey = ''
+            gameState.forEach((e)=> {
+                memoKey+=e
+            })
+            if (!(memoKey in memo)) {
+                const scores = []
+                const moves = []
+                const currentPlayer = players[playerState]
+                for (let i = 0; i < nodeList.length ; i++) {
+                    loadGameState(gameState,playerState)
+                    let node = nodeList[i]
+                    if (node.symbol===null) {
+                        node.symbol=currentPlayer.symbol
+                        if (getScore(currentPlayer,node)!==0) { 
+                            choice = node //catches the case where only one move is possible
+                            memo[memoKey]=[choice,getScore(currentPlayer,node)]
+                            
+                            return getScore(currentPlayer,node)
+                        }
+        
+                        moves.push(node) 
+                        scores.push(getMove(getGameState(),Math.abs(playerState-1)))
+                    } 
+                } 
+                if (currentPlayer===players[initPlayerIndex]) {
+                    maxScoreIndex = getMaxIndex(scores)
+                    choice = moves[maxScoreIndex]
+                    memo[memoKey]=[choice,scores[maxScoreIndex]]
+                    return memo[memoKey][1]
+                } else {
+                    minScoreIndex = getMinIndex(scores)
+                    choice = moves[minScoreIndex]
+                    memo[memoKey]=[choice,scores[minScoreIndex]]
+                    return memo[memoKey][1]
+                }
+            } else {
+                choice = memo[memoKey][0]
+                // console.log(Object.keys(memo).length)
+                return memo[memoKey][1]
+            }
+        }
+    }
+
+    const initGameState = getGameState()
+    const initPlayerIndex = turnIndex 
+    const initPlayer = players[turnIndex]
+    let choice
+    getMove(initGameState,initPlayerIndex)
+    console.log(choice)
+    loadGameState(initGameState,initPlayerIndex)
+    move(players[turnIndex],choice)
+}
+
 
 //=============================================Game flow=============================================//
 
-let players=[new Player('jack','x','img/x.png',false),new Player('jill','o','img/o.png',true)] //add players to this
+const botList = 1
+
+
+let players=[new Player('jack','x','img/x.png',false),new Player('jill','o','img/o.png',true,13)] //add players to this
 let turnIndex = 0
 let nodeList= []
 let winLines = {
@@ -230,120 +381,23 @@ document.querySelector('#continue').addEventListener('click',()=>{
 
 
 
-const computerMove = () => {
+const leftBotSwitch = document.querySelector('#leftPanel input[type="checkbox"')
+const rightBotSwitch = document.querySelector('#rightPanel input[type="checkbox"')
+const leftBotList = document.querySelector('#leftBotList')
+const rightBotList = document.querySelector('#rightBotList')
 
-    computerSymbol = players[turnIndex].symbol
-    
-    const getGameState = () => {
-        return nodeList.map((node) => {
-            return node.symbol 
-        })
-    }
+leftBotSwitch.addEventListener('click',(e)=>{
+    leftBotList.classList.toggle('vis')
+})
 
-    const loadGameState = (state,pstate) => {
-        let i = 0
-        for (symbol of state) {
-            nodeList[i].symbol = symbol
-            i++
-        }
-        playerIndex = pstate
-    }
-    
-    const getScore = (player,node) => {
-        if (checkWin(player,node)==='win') {
-            if (player===players[initPlayerState]) {
-                return 10
-            } else {
-                return -10
-            }
-        } else if (checkWin(player,node)==='draw') {
-            return 1 
-        } else {
-            return 0
-        }
-    }
-    
-    const getMaxIndex = (arr) => {
-        let maxIndex = 0
-        let max = -Infinity
-        let count=0
-        arr.forEach((e) => {
-            if (e>=max) {
-                max=e
-                maxIndex=count
-            }
-            count++
-        })
-        return maxIndex
-    }
+rightBotSwitch.addEventListener('click',(e)=>{
+    rightBotList.classList.toggle('vis')
+})
 
-    const getMinIndex = (arr) => {
-        let minIndex = 0
-        let min = Infinity
-        let count=0
-        arr.forEach((e) => {
-            if (e<=min) {
-                min=e
-                minIndex=count
-            }
-            count++
-        })
-        return minIndex
-    }
-
-    const getMove = (gameState,playerState) => {
-        let memoKey = ''
-        gameState.forEach((e)=> {
-            memoKey+=e
-        })
-        if (!(memoKey in memo)) {
-            const scores = []
-            const moves = []
-            const currentPlayer = players[playerState]
-            for (let i = 0; i < nodeList.length ; i++) {
-                loadGameState(gameState,playerState)
-                let node = nodeList[i]
-                if (node.symbol===null) {
-                    node.symbol=currentPlayer.symbol
-                    if (getScore(currentPlayer,node)!==0) { 
-                        choice = node //catches the case where only one move is possible
-                        memo[memoKey]=[choice,getScore(currentPlayer,node)]
-                        
-                        return getScore(currentPlayer,node)
-                    }
-    
-                    moves.push(node) 
-                    scores.push(getMove(getGameState(),Math.abs(playerState-1)))
-                } 
-            } 
-            if (currentPlayer===players[initPlayerState]) {
-                maxScoreIndex = getMaxIndex(scores)
-                choice = moves[maxScoreIndex]
-                memo[memoKey]=[choice,scores[maxScoreIndex]]
-                return memo[memoKey][1]
-            } else {
-                minScoreIndex = getMinIndex(scores)
-                choice = moves[minScoreIndex]
-                memo[memoKey]=[choice,scores[minScoreIndex]]
-                return memo[memoKey][1]
-            }
-        } else {
-            choice = memo[memoKey][0]
-            console.log(Object.keys(memo).length)
-            return memo[memoKey][1]
-        }
-
-    }
-
-    const initGameState = getGameState()
-    const initPlayerState = turnIndex 
-    let choice
-    getMove(initGameState,initPlayerState)
-    loadGameState(initGameState,initPlayerState)
-    move(players[turnIndex],choice)
-}
-
-
-
+leftBotList.addEventListener('click',(e)=>{
+    console.log(e.target)
+    console.log(e.currentTarget)
+    console.log(e.target.value)
+})
 
 

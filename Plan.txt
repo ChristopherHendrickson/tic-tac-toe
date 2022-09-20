@@ -94,6 +94,8 @@ Add a difficulty setting, with purely a blocker. and fully random. Should be abl
 Implement a selectable 'in-a-row' win requirement for bigger games
 computers can fight eachother
 
+Idea to fix runtime issue on bigger boards. Until there is 9 empty nodes, make moves randomly, or next to the lasst move.
+
 Implement the game and score saving
 
 	
