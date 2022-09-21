@@ -512,7 +512,7 @@ let storage = localStorage
 const leftBots = createBots()
 const rightBots = createBots() //legacy shit that I dont wanna fix so making two set of bots
 
-const defaultLeft = new Player('Player 1','x','img/x.png',false,100,'Time to tic some tacs')
+const defaultLeft = new Player('Player 1','x','img/x.png',false,100,'Tickity Tackity')
 const defaultRight = new Player('Player 2','o','img/o.png',false,100,'1, 2, 3, 4, something something -AK')
 
 // loadCustomPlayers() make this function. also need a save custom players. Trigger on win (to update record), and on create.
