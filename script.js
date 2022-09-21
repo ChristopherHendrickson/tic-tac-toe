@@ -1,5 +1,5 @@
 class Player {
-    constructor(name,symbol,symbolRef,isComputer,difficulty=9) {
+    constructor(name,symbol,symbolRef,isComputer,difficulty=9,catchPhrase=' ') {
         this.name = name
         this.symbol = symbol
         this.symbolRef = symbolRef
@@ -9,6 +9,8 @@ class Player {
         this.difficulty = difficulty
         this.score = 0
         this.avatar = `img/${this.name}.png`
+        this.catchPhrase = catchPhrase
+
     }
 
 }
@@ -30,11 +32,11 @@ class Node {
             // console.log(players[turnIndex].isComputer)
             let result
             if (!players[turnIndex].isComputer) {
-                result = move(players[turnIndex],this)
+                result = move(players[turnIndex],this) //move returns 'win' or 'draw'
             }
             if (result!=='win') {
                 if (players[turnIndex].isComputer) {
-                    setTimeout(computerMove,200)
+                    setTimeout(computerMove,400)
                 }
             }
         }
@@ -115,6 +117,7 @@ const move = (player,node) => {
         const result = checkWin(player,node)
         if (result === 'win') {
             showWin(player,node)
+            player.score+=1
             return result
         }
         if (result ==='draw') {
@@ -172,6 +175,8 @@ const checkWin = (player,node) => {
     const longestLine = Math.max(rowCount,colCount,leftDiagCount,rightDiagCount)
     if (longestLine===parseInt(size)) {
         // console.log('win')
+
+
         return 'win'
     } else if (totalCount===nodeList.length) {
         // console.log('draw')
@@ -370,20 +375,40 @@ const updatePlayers = (player0,player1) => {
 }
 
 const updatePlayerPanels = () => {
-    const leftimg = players[0].avatar
-    const rightimg = players[1].avatar
-    const leftName = players[0].name
-    const rightName = players[1].name
-    const leftDifficultyDescription = players[0].difficulty < 4 ? 'Novice' : players[0].difficulty < 7 ? 'Intermediate' : 'Undefeatable'
-    const rightDifficultyDescription = players[1].difficulty < 4 ? 'Novice' : players[1].difficulty < 7 ? 'Intermediate' : 'Undefeatable'
-    const leftScore = players[0].score
-    const rightScore = players[1].score
+    const leftPlayer = players[0]
+    const rightPlayer = players[1]
+    const leftimg = leftPlayer.avatar
+    const rightimg = rightPlayer.avatar
+    const leftName = leftPlayer.name + (leftPlayer.isComputer ? ' <span class = medium>(Computer)</p>' : '')
+    const rightName = rightPlayer.name + (rightPlayer.isComputer ? ' <span class = medium>(Computer)</p>' : '')
+    const leftDifficultyDescription = leftPlayer.difficulty < 4 ? 'Novice' : leftPlayer.difficulty < 9 ? 'Intermediate' : 'Undefeatable'
+    const rightDifficultyDescription = rightPlayer.difficulty < 4 ? 'Novice' : rightPlayer.difficulty < 9 ? 'Intermediate' : 'Undefeatable'
+    const leftCatchPhrase = leftPlayer.catchPhrase
+    const rightCatchPhrase = rightPlayer.catchPhrase
+    const leftScore = leftPlayer.score
+    const rightScore = rightPlayer.score
 
     const leftPanel = document.querySelector('#leftPanel')
     const rightPanel = document.querySelector('#rightPanel')
 
     leftPanel.querySelector('img').setAttribute('src',leftimg)
     rightPanel.querySelector('img').setAttribute('src',rightimg)
+    
+    if (leftPlayer.isComputer) {
+        leftPanel.querySelector('ul').innerHTML = `<li>${leftName}</li><li>${leftDifficultyDescription}</li>`
+    } else {
+        leftPanel.querySelector('ul').innerHTML = `<li>${leftName}</li><li>${leftCatchPhrase}</li>`
+    }
+    
+    if (rightPlayer.isComputer) {
+        rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>${rightDifficultyDescription}</li>`
+    } else {
+        rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>${rightCatchPhrase}</li>`
+    }
+
+    leftPanel.querySelector('.score').innerHTML = `Score: ${leftScore}`
+    rightPanel.querySelector('.score').innerHTML = `Score: ${rightScore}`
+
 
 }
 
