@@ -23,8 +23,10 @@
             <ul>
                 
             </ul>
-            <p class="score">Score</p>
-            <p class="record small">Record vs:</p>
+            <span class="scoreSpan">
+                <p class="score">Score</p>
+                <p class="record medium"></p>
+            </span>
             <span class="playerSelect">
                 <p class="small justifyRight humanTag">Human</p>
                 <label class="switch">
@@ -36,20 +38,22 @@
             
             <select class="botList" id="leftBotList"></select>
         </div>
-        
+
         <div class='board'></div>
 
         <div class="playerPanel" id="rightPanel">
-            <img src='img/Philip.png' class='avatar' id='rightavatar'/>
+            <img src='img/player 2.png' class='avatar' id='rightavatar'/>
             <ul>
                 
             </ul>
-            <p class="score">Score</p>
-            <p class="record small">Record vs:</p>
+            <span class='scoreSpan'>
+                <p class="score">Score</p>
+                <p class="record medium"></p>
+            </span>
             <span class="playerSelect">
                 <p class="small justifyRight humanTag">Human</p>
                     <label class="switch">
-                    <input type="checkbox" checked = "true">
+                    <input type="checkbox">
                     <span class="slider"></span>
                 </label>
                 <p class="small justifyLeft">Bot</p>
@@ -60,8 +64,6 @@
         </div>
         
         <div class="scoreBar">
-            <span>SCORE</span>
-            <span>SCORE</span>
         </div>
         
     </section>

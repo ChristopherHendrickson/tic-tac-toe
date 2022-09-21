@@ -1,5 +1,6 @@
 class Player {
-    constructor(name,symbol,symbolRef,isComputer,difficulty=9,catchPhrase=' ') {
+    static instances = []
+    constructor(name,symbol,symbolRef,isComputer,difficulty=9,catchPhrase='') {
         this.name = name
         this.symbol = symbol
         this.symbolRef = symbolRef
@@ -8,10 +9,12 @@ class Player {
         this.isComputer = isComputer
         this.difficulty = difficulty
         this.score = 0
+        this.record = {} //whenever a player object versus an opponent, the opponent is added to .record (ley is opponents name) and incremeneted when they beat that player
         this.avatar = `img/${this.name}.png`
-        this.catchPhrase = catchPhrase
-
+        this.catchPhrase = catchPhrase  
+        Player.instances.push(this)
     }
+
 
 }
 
@@ -27,15 +30,15 @@ class Node {
     }
     addNodeListener() {
         const nodeDiv = document.querySelector('#'+this.id)
-        const listenerFunction = ()=>{
+        const listenerFunction = ()=>{ //making this a named function so i can auto loop over when two bots vs eachother
             console.log('=================================')
             // console.log(players[turnIndex].isComputer)
             let result
-            if (!players[turnIndex].isComputer) {
-                result = move(players[turnIndex],this) //move returns 'win' or 'draw'
+            if (!playersPlaying[turnIndex].isComputer) {
+                result = move(playersPlaying[turnIndex],this) //move returns 'win' or 'draw'
             }
             if (result!=='win') {
-                if (players[turnIndex].isComputer) {
+                if (playersPlaying[turnIndex].isComputer) {
                     setTimeout(computerMove,400)
                 }
             }
@@ -64,7 +67,7 @@ const generateBoard = (size=3) => {
         winCols: {},
         winDiags: {},
     }
-
+    //add empty lists
     for (let row=0;row<size;row++) {
         winLines.winRows[row]=[]
     }
@@ -74,7 +77,7 @@ const generateBoard = (size=3) => {
     //always only 2 diag win lines
     winLines.winDiags.left=[]
     winLines.winDiags.right=[]
-    //add nodes to the win line lists
+    //create nodes and add html representations to the DOM
     for (let row=0;row<size;row++) {
 
         for (let col=0;col<size;col++) {
@@ -113,17 +116,21 @@ const move = (player,node) => {
         // computerMove()
         // console.log('actual List')
         // console.log(nodeList)
-        turnIndex = Math.abs(turnIndex-1) //bounces between 1 and 0
+
         const result = checkWin(player,node)
         if (result === 'win') {
             showWin(player,node)
             player.score+=1
+            updatePlayerRecords(player,playersPlaying[Math.abs(turnIndex-1)])
+            updatePlayerPanels()
+            savePlayerData()
             return result
-        }
+        }   
         if (result ==='draw') {
             showDraw()
             return result
         }
+        turnIndex = Math.abs(turnIndex-1) //bounces between 1 and 0
 
     }
 }
@@ -221,7 +228,7 @@ const computerMove = () => {
     
     const getScore = (player,node) => {
         if (checkWin(player,node)==='win') {
-            if (player===players[initPlayerIndex]) {
+            if (player===playersPlaying[initPlayerIndex]) {
                 return 100
             } else {
                 return -100
@@ -298,7 +305,7 @@ const computerMove = () => {
                 const scores = []
                 const moves = []
                 let node
-                const currentPlayer = players[playerState]
+                const currentPlayer = playersPlaying[playerState]
                 for (let i = 0; i < nodeList.length ; i++) {
                     loadGameState(gameState,playerState)
                     node = nodeList[i]
@@ -315,7 +322,7 @@ const computerMove = () => {
                         scores.push(getMove(getGameState(),Math.abs(playerState-1)))
                     } 
                 } 
-                if (currentPlayer===players[initPlayerIndex]) {
+                if (currentPlayer===playersPlaying[initPlayerIndex]) {
                     maxScoreIndex = getMaxIndex(scores)
                     choice = moves[maxScoreIndex]
                     memo[memoKey]=[choice,(scores[maxScoreIndex]+scores.reduce((a, b) => a + b,0) / scores.length**3)*0.9] 
@@ -339,44 +346,57 @@ const computerMove = () => {
 
     const initGameState = getGameState()
     const initPlayerIndex = turnIndex 
-    const initPlayer = players[turnIndex]
+    const initPlayer = playersPlaying[turnIndex]
     let choice
     getMove(initGameState,initPlayerIndex)
     console.log(choice)
     loadGameState(initGameState,initPlayerIndex)
-    console.log(turnIndex)
-    console.log(players[turnIndex].name)
-    console.log(players[turnIndex].difficulty)
-    move(players[turnIndex],choice)
+    move(playersPlaying[turnIndex],choice)
 }
 
 
-const createBots = (side) => {
-    const symbol = side === 'left' ? 'x':'o'
+const createBots = () => {
+    const symbol = 'x'
     const botList = {}
     botList['Philip']=(new Player('Philip',symbol,`img/${symbol}.png`,true,0))
     botList['Laika']=(new Player('Laika',symbol,`img/${symbol}.png`,true,7))
     botList['Burke']=(new Player('Burke',symbol,`img/${symbol}.png`,true,13))
     
-    const htmlSelect = document.querySelector(`#${side}BotList`)
+    const htmlLeftSelect = document.querySelector(`#leftBotList`)
+    const htmlRightSelect = document.querySelector(`#rightBotList`)
     let htmlOptions = ''
     for (bot in botList) {
         htmlOptions+=`<option id="${botList[bot].name}">${botList[bot].name}</option>`
     }
-    htmlSelect.innerHTML=htmlOptions
+    htmlLeftSelect.innerHTML=htmlOptions
+    htmlRightSelect.innerHTML=htmlOptions
     return botList
 }
 
 
 const updatePlayers = (player0,player1) => {
-    players[0]=player0
-    players[1]=player1
+    playersPlaying[0] = player0
+    playersPlaying[0].symbol ='x'
+    playersPlaying[0].symbolRef ='img/x.png'
+    playersPlaying[0].audio = new Audio(`aud/x.mp3`)
+
+    playersPlaying[1] = player1
+    playersPlaying[1].symbol ='o'
+    playersPlaying[1].symbolRef ='img/o.png'
+    playersPlaying[1].audio = new Audio(`aud/o.mp3`)
+
+
+    //reset the session score of every player
+    for (p of Player.instances) {
+        p.score=0
+    }
+
     updatePlayerPanels()
 }
 
 const updatePlayerPanels = () => {
-    const leftPlayer = players[0]
-    const rightPlayer = players[1]
+    const leftPlayer = playersPlaying[0]
+    const rightPlayer = playersPlaying[1]
     const leftimg = leftPlayer.avatar
     const rightimg = rightPlayer.avatar
     const leftName = leftPlayer.name + (leftPlayer.isComputer ? ' <span class = medium>(Computer)</p>' : '')
@@ -388,6 +408,19 @@ const updatePlayerPanels = () => {
     const leftScore = leftPlayer.score
     const rightScore = rightPlayer.score
 
+    let leftRecord = leftPlayer.record[rightPlayer.name]
+    let rightRecord = rightPlayer.record[leftPlayer.name]
+    console.log(rightPlayer.name)
+    console.log(rightPlayer.record)
+    if (leftRecord===undefined) {
+        leftPlayer.record[rightPlayer.name] = 0
+        leftRecord = 0
+    }
+    if (rightRecord===undefined) {
+        rightPlayer.record[leftPlayer.name]=0
+        rightRecord = 0
+    }
+
     const leftPanel = document.querySelector('#leftPanel')
     const rightPanel = document.querySelector('#rightPanel')
 
@@ -397,19 +430,72 @@ const updatePlayerPanels = () => {
     if (leftPlayer.isComputer) {
         leftPanel.querySelector('ul').innerHTML = `<li>${leftName}</li><li>${leftDifficultyDescription}</li>`
     } else {
-        leftPanel.querySelector('ul').innerHTML = `<li>${leftName}</li><li>${leftCatchPhrase}</li>`
+        leftPanel.querySelector('ul').innerHTML = `<li>${leftName}</li><li>"${leftCatchPhrase}"</li>`
     }
     
     if (rightPlayer.isComputer) {
         rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>${rightDifficultyDescription}</li>`
+
     } else {
-        rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>${rightCatchPhrase}</li>`
+        rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>"${rightCatchPhrase}"</li>`
     }
+
+
+    leftPanel.querySelector('.record').innerHTML = `Record vs ${rightPlayer.name}: ${leftRecord}`
+    rightPanel.querySelector('.record').innerHTML=`Record vs ${leftPlayer.name}: ${rightRecord}`
 
     leftPanel.querySelector('.score').innerHTML = `Score: ${leftScore}`
     rightPanel.querySelector('.score').innerHTML = `Score: ${rightScore}`
 
 
+}
+
+const updatePlayerRecords = (winner,loser) => {
+    winner.record[loser.name]+=1
+    console.log(winner.record[loser.name])
+    console.log(winner)
+    console.log(loser)
+}
+
+
+const savePlayerData = () => {
+    let playerData={}
+    for (p of Player.instances) {
+        playerData[p.name]=p
+    }
+    stringPlayerData = JSON.stringify(playerData)
+    storage.setItem('playerData',stringPlayerData)
+    console.log('playerData Saved')
+}
+
+
+const loadPlayerData = () => {
+    const data = storage.getItem('playerData')
+    const dataObject = JSON.parse(data)
+    const defulatNames = ['Philip','Laika','Player 1','Player 2','Burke']
+    const customPlayers = {}
+    for (let playerKey in dataObject) {
+        let loadedPlayer=dataObject[playerKey]
+        if (defulatNames.includes(loadedPlayer.name)) {
+            //find a reference to the existing player instance to edit it.
+            for (i of Player.instances) {
+                if (i.name === loadedPlayer.name) {
+                    i.record=loadedPlayer.record
+                    console.log(`${i.name} loaded record`,loadedPlayer.record)
+                }
+            }
+            //now update the records for each default player
+
+
+        } else {
+            //create new player instance of custom players 
+            let p = loadedPlayer
+            let reloadedCustom = new Player(p.name,p.symbol,p.symbolRef,p.isComputer,p.difficulty,p.catchPhrase)
+            customPlayers[reloadedCustom.name]=reloadedCustom
+            console.log(`${p.name} loaded record`)
+        }
+    }
+    return customPlayers
 }
 
 //=============================================Game flow=============================================//
@@ -420,18 +506,23 @@ const updatePlayerPanels = () => {
 
 
 //GLOBALS
+let storage = localStorage
 
-const leftBots = createBots('left')
-const rightBots = createBots('right')
-const defaultLeft = new Player('Player 1','x','img/x.png',false)
-const defaultRight = new Player('Player 2','o','img/o.png',false)
+//create/load player and bot instances 
+const leftBots = createBots()
+const rightBots = createBots() //legacy shit that I dont wanna fix so making two set of bots
 
-let players = {
+const defaultLeft = new Player('Player 1','x','img/x.png',false,100,'Time to tic some tacs')
+const defaultRight = new Player('Player 2','o','img/o.png',false,100,'1, 2, 3, 4, something something -AK')
+
+// loadCustomPlayers() make this function. also need a save custom players. Trigger on win (to update record), and on create.
+
+let playersPlaying = {
     '0':defaultLeft,
     '1':defaultRight,
 }
 
-updatePlayers(players[0],rightBots['Philip'])
+
 
 let turnIndex = 0
 let nodeList = []
@@ -442,7 +533,16 @@ let winLines = {
 }
 let size = 3
 let memo = {}
+
 generateBoard(size)
+
+const customPlayers = loadPlayerData()
+console.log('custom players')
+console.log(customPlayers)
+
+
+savePlayerData()
+updatePlayerPanels()
 
 
 //EVENT LISTENERS
@@ -479,7 +579,6 @@ const leftBotSwitch = document.querySelector('#leftPanel input[type="checkbox"')
 const rightBotSwitch = document.querySelector('#rightPanel input[type="checkbox"')
 const leftBotSelect = document.querySelector('#leftBotList')
 const rightBotSelect = document.querySelector('#rightBotList')
-rightBotSelect.classList.toggle('vis')
 
 
 leftBotSwitch.addEventListener('click',(e)=>{
@@ -489,11 +588,13 @@ leftBotSwitch.addEventListener('click',(e)=>{
         const botName = leftBotSelect.value
         const leftPlayer = leftBots[botName]
         console.log(leftPlayer)
-        updatePlayers(leftPlayer,players[1]) //retain Right hand player (players[1])
+        updatePlayers(leftPlayer,playersPlaying[1]) //retain Right hand player (players[1])
     } else {
-        updatePlayers(defaultLeft,players[1])
+        updatePlayers(defaultLeft,playersPlaying[1])//ditto below
         //add default human player 1
     }
+    generateBoard(size)
+
 })
 
 rightBotSwitch.addEventListener('click',(e)=>{
@@ -503,23 +604,30 @@ rightBotSwitch.addEventListener('click',(e)=>{
         const botName = rightBotSelect.value
         const rightPlayer = rightBots[botName]
         console.log(rightPlayer)
-        updatePlayers(players[0],rightPlayer) //retain Right hand player (players[1])
+        updatePlayers(playersPlaying[0],rightPlayer) //retain Right hand player (players[1])
+
     } else {
-        updatePlayers(players[0],defaultRight)
+        updatePlayers(playersPlaying[0],defaultRight)//NEED TO UPDATE THIS FOR CUSTOM PLAYERS INSTEAD OF DEFAULT ONLY
         //add default human player 2
     }
+    generateBoard(size)
+
 })
 
 leftBotSelect.addEventListener('click',(e)=>{
     const botName = leftBotSelect.value
     const leftPlayer = leftBots[botName]
-    updatePlayers(leftPlayer,players[1])
+    if (playersPlaying[0] !== leftPlayer) {
+        generateBoard(size)
+    }
+    updatePlayers(leftPlayer,playersPlaying[1])
 })
 
 rightBotSelect.addEventListener('click',(e)=>{
     const botName = rightBotSelect.value
     const rightPlayer = rightBots[botName]
-    updatePlayers(players[0],rightPlayer)
+    if (playersPlaying[1] !== rightPlayer) {
+        generateBoard(size)
+    }
+    updatePlayers(playersPlaying[0],rightPlayer)
 })
-
-
