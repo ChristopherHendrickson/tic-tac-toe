@@ -563,7 +563,7 @@ document.getElementById('sizeInput').addEventListener('click',(e)=>{
 })
 
 
-document.querySelector('#continue').addEventListener('click',()=>{
+document.querySelector('.outcomeOverlay').addEventListener('click',()=>{
     const overlay = document.querySelector('.outcomeOverlay')
     const content = document.querySelector('.content')
     overlay.classList.toggle('showOutcome')
@@ -638,7 +638,7 @@ rightBotSelect.addEventListener('click',(e)=>{
 
 
 document.querySelector('.startScreen').addEventListener('click',(e)=>{
-    
+
     document.querySelector('.startScreen').classList.add('hidden')
     leftPanel.classList.remove('hideLeft')
     rightPanel.classList.remove('hideRight')
