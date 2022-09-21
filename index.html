@@ -13,12 +13,17 @@
     <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Poiret+One&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="startScreen">
+        <h1>TIC-TAC-TOE</h1>
+        <h3>BY CHRIS</h3>
+        <h4>(click to Begin)</h4>
+    </div>
     <nav>
         NAV 
         <input id='sizeInput' type="number" value=3 min=2 max=20>
     </nav>
     <section class="content">
-        <div class="playerPanel" id="leftPanel">
+        <div class="playerPanel hideLeft" id="leftPanel">
             <img src='img/Player 1.png' class='avatar' id='leftavatar'/>
             <ul>
                 
@@ -39,9 +44,9 @@
             <select class="botList" id="leftBotList"></select>
         </div>
 
-        <div class='board'></div>
+        <div class='board hidden'></div>
 
-        <div class="playerPanel" id="rightPanel">
+        <div class="playerPanel hideRight" id="rightPanel">
             <img src='img/player 2.png' class='avatar' id='rightavatar'/>
             <ul>
                 
@@ -52,7 +57,7 @@
             </span>
             <span class="playerSelect">
                 <p class="small justifyRight humanTag">Human</p>
-                    <label class="switch">
+                <label class="switch">
                     <input type="checkbox">
                     <span class="slider"></span>
                 </label>

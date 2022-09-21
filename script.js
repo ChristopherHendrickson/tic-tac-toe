@@ -200,7 +200,7 @@ const showWin = (player,node) => {
     const overlay = document.querySelector('.outcomeOverlay')
     const content = document.querySelector('.content')
     overlay.classList.toggle('showOutcome')
-    content.classList.toggle('hideBoard')
+    content.classList.toggle('hideContent')
     document.querySelector('#continue').style.display='inline-block'
 }
 
@@ -567,7 +567,7 @@ document.querySelector('#continue').addEventListener('click',()=>{
     const overlay = document.querySelector('.outcomeOverlay')
     const content = document.querySelector('.content')
     overlay.classList.toggle('showOutcome')
-    content.classList.toggle('hideBoard')
+    content.classList.toggle('hideContent')
     generateBoard(size)
 })
 
@@ -579,6 +579,10 @@ const leftBotSwitch = document.querySelector('#leftPanel input[type="checkbox"')
 const rightBotSwitch = document.querySelector('#rightPanel input[type="checkbox"')
 const leftBotSelect = document.querySelector('#leftBotList')
 const rightBotSelect = document.querySelector('#rightBotList')
+const leftPanel = document.querySelector('#leftPanel')
+const rightPanel = document.querySelector('#rightPanel')
+const board = document.querySelector('.board')
+
 
 
 leftBotSwitch.addEventListener('click',(e)=>{
@@ -631,3 +635,14 @@ rightBotSelect.addEventListener('click',(e)=>{
     }
     updatePlayers(playersPlaying[0],rightPlayer)
 })
+
+
+document.querySelector('.startScreen').addEventListener('click',(e)=>{
+    
+    document.querySelector('.startScreen').classList.add('hidden')
+    leftPanel.classList.remove('hideLeft')
+    rightPanel.classList.remove('hideRight')
+    board.classList.remove('hidden')
+})
+
+
