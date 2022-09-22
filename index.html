@@ -19,11 +19,9 @@
         <h4>(click to Begin)</h4>
     </div>
     <nav>
-        NAV 
-        <input id='sizeInput' type="number" value=3 min=2 max=20>
     </nav>
     <section class="content">
-        <div class="playerPanel hideLeft" id="leftPanel">
+        <div class="playerPanel hideLeft turn" id="leftPanel">
             <img src='img/Player 1.png' class='avatar' id='leftavatar'/>
             <ul>
                 
@@ -68,14 +66,19 @@
 
         </div>
         
-        <div class="scoreBar">
+        <div class = "bottomPanel">
+            <div class="sizer" id="decreaseSize"><p class="sizerText">-</p></div>
+            <div class="sizer" id="increaseSize"><p class="sizerText">+</p></div>
         </div>
         
     </section>
 
     <section class='outcomeOverlay'>
         <h1>RESULTS</h1>
+        <img src="#"/>
+
         <h4>(Click to play again)</h4>
+
     </section>
     <article>
 

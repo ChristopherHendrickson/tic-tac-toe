@@ -35,11 +35,11 @@ class Node {
             // console.log(players[turnIndex].isComputer)
             let result
             if (!playersPlaying[turnIndex].isComputer) {
-                result = move(playersPlaying[turnIndex],this) //move returns 'win' or 'draw'
+                result = move(playersPlaying[turnIndex],this) //move returns 'win'/'draw'
             }
-            if (result!=='win') {
+            if (!result) {
                 if (playersPlaying[turnIndex].isComputer) {
-                    setTimeout(computerMove,400)
+                    setTimeout(computerMove,700)
                 }
             }
         }
@@ -53,13 +53,19 @@ const generateBoard = (size=3) => {
     memo = {}
     turnIndex = 0
     //adjust board grid to fit all the squares
-    const board = document.querySelector('.board')
+    const boards = document.querySelectorAll('.board')
+    const board = boards[0]
+    const outcomeBoard = boards[1]
     board.innerHTML=''
     frString = '1fr '.repeat(size)
     nodeList=[]
     board.style.gridTemplateColumns = frString
     board.style.gridTemplateRows = frString
 
+    const leftPanel = document.querySelector('#leftPanel')
+    const rightPanel = document.querySelector('#rightPanel')
+    leftPanel.classList.toggle('turn',true)
+    rightPanel.classList.toggle('turn',false)
     //add lits to the winLines for all rows and cols
     //first, reset winLines
     winLines = {
@@ -90,7 +96,7 @@ const generateBoard = (size=3) => {
             nodeDiv.setAttribute('col',node.col)
             nodeDiv.setAttribute('grid-row',`${node.row+1}/${node.row+2}`)
             nodeDiv.setAttribute('grid-column',`${node.col+1}/${node.col+2}`)
-
+            
             board.appendChild(nodeDiv)
             node.addNodeListener()
 
@@ -116,21 +122,27 @@ const move = (player,node) => {
         // computerMove()
         // console.log('actual List')
         // console.log(nodeList)
+        const leftPanel = document.querySelector('#leftPanel')
+        const rightPanel = document.querySelector('#rightPanel')
+        leftPanel.classList.toggle('turn')
+        rightPanel.classList.toggle('turn')
 
         const result = checkWin(player,node)
         if (result === 'win') {
-            showWin(player,node)
             player.score+=1
+            showWin(player)
             updatePlayerRecords(player,playersPlaying[Math.abs(turnIndex-1)])
             updatePlayerPanels()
             savePlayerData()
             return result
         }   
-        if (result ==='draw') {
+        if (result === 'draw') {
             showDraw()
             return result
         }
         turnIndex = Math.abs(turnIndex-1) //bounces between 1 and 0
+        return false
+
 
     }
 }
@@ -173,7 +185,7 @@ const checkWin = (player,node) => {
         }
     }
 
-    for (n of nodeList) {
+    for (n of nodeList) { // draw check
         if (n.symbol !== null) {
             totalCount+=1
         }
@@ -181,9 +193,8 @@ const checkWin = (player,node) => {
 
     const longestLine = Math.max(rowCount,colCount,leftDiagCount,rightDiagCount)
     if (longestLine===parseInt(size)) {
-        // console.log('win')
-
-
+        //
+        
         return 'win'
     } else if (totalCount===nodeList.length) {
         // console.log('draw')
@@ -192,20 +203,36 @@ const checkWin = (player,node) => {
 
 }
 
-const showWin = (player,node) => {
+const showWin = (player) => {
     //highlight winning lines
     //display result overlay
     //update player score
     //update local storage for player object
-    const overlay = document.querySelector('.outcomeOverlay')
-    const content = document.querySelector('.content')
-    overlay.classList.toggle('showOutcome')
-    content.classList.toggle('hideContent')
-    document.querySelector('#continue').style.display='inline-block'
+    setTimeout(() => {
+        const img = document.createElement('img')
+        const overlay = document.querySelector('.outcomeOverlay')
+        const content = document.querySelector('.content')
+        overlay.classList.toggle('showOutcome')
+        content.classList.toggle('hideContent')
+        overlay.insertBefore(img,overlay.querySelector('h4'))
+        overlay.querySelector('img').setAttribute('src',player.avatar)
+        overlay.querySelector('h1').innerHTML = player.name + ' WINS'
+    },200)
+
+
 }
 
 const showDraw = () => {
-    showWin(1,1)
+
+    setTimeout(() => {
+        const overlay = document.querySelector('.outcomeOverlay')
+        const content = document.querySelector('.content')
+        overlay.classList.toggle('showOutcome')
+        content.classList.toggle('hideContent')
+        overlay.querySelector('img').remove()
+        overlay.querySelector('h1').innerHTML = 'DRAW'
+    },200)
+
 }
 
 
@@ -349,9 +376,17 @@ const computerMove = () => {
     const initPlayer = playersPlaying[turnIndex]
     let choice
     getMove(initGameState,initPlayerIndex)
-    console.log(choice)
     loadGameState(initGameState,initPlayerIndex)
-    move(playersPlaying[turnIndex],choice)
+    console.log(turnIndex)
+    const result = move(playersPlaying[turnIndex],choice)
+
+
+    //move function has now iterated turnInedex to the next player
+    //if the next player is also a bot, continue calling computerMove until move returns a game ending result
+    if (!result & playersPlaying[turnIndex].isComputer) {
+        setTimeout(computerMove,900)
+    }
+
 }
 
 
@@ -401,8 +436,8 @@ const updatePlayerPanels = () => {
     const rightimg = rightPlayer.avatar
     const leftName = leftPlayer.name + (leftPlayer.isComputer ? ' <span class = medium>(Computer)</p>' : '')
     const rightName = rightPlayer.name + (rightPlayer.isComputer ? ' <span class = medium>(Computer)</p>' : '')
-    const leftDifficultyDescription = leftPlayer.difficulty < 4 ? 'Novice' : leftPlayer.difficulty < 9 ? 'Intermediate' : 'Undefeatable'
-    const rightDifficultyDescription = rightPlayer.difficulty < 4 ? 'Novice' : rightPlayer.difficulty < 9 ? 'Intermediate' : 'Undefeatable'
+    const leftDifficultyDescription = leftPlayer.difficulty < 4 ? 'Novice' : leftPlayer.difficulty < 9 ? 'Intermediate' : 'Master'
+    const rightDifficultyDescription = rightPlayer.difficulty < 4 ? 'Novice' : rightPlayer.difficulty < 9 ? 'Intermediate' : 'Master'
     const leftCatchPhrase = leftPlayer.catchPhrase
     const rightCatchPhrase = rightPlayer.catchPhrase
     const leftScore = leftPlayer.score
@@ -412,6 +447,8 @@ const updatePlayerPanels = () => {
     let rightRecord = rightPlayer.record[leftPlayer.name]
     console.log(rightPlayer.name)
     console.log(rightPlayer.record)
+
+    //if these two players have never faced eachother, the record key does not exist yet, so create it and set it to 0
     if (leftRecord===undefined) {
         leftPlayer.record[rightPlayer.name] = 0
         leftRecord = 0
@@ -435,7 +472,6 @@ const updatePlayerPanels = () => {
     
     if (rightPlayer.isComputer) {
         rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>${rightDifficultyDescription}</li>`
-
     } else {
         rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>"${rightCatchPhrase}"</li>`
     }
@@ -470,21 +506,20 @@ const savePlayerData = () => {
 
 
 const loadPlayerData = () => {
-    const data = storage.getItem('playerData')
-    const dataObject = JSON.parse(data)
-    const defulatNames = ['Philip','Laika','Player 1','Player 2','Burke']
+    const playerData = storage.getItem('playerData')
+    const playerDataObject = JSON.parse(playerData)
+    const defulatNames = ['Philip','Laika','Burke','Player 1','Player 2']
     const customPlayers = {}
-    for (let playerKey in dataObject) {
-        let loadedPlayer=dataObject[playerKey]
+    for (let playerKey in playerDataObject) {
+        let loadedPlayer=playerDataObject[playerKey]
         if (defulatNames.includes(loadedPlayer.name)) {
-            //find a reference to the existing player instance to edit it.
             for (i of Player.instances) {
                 if (i.name === loadedPlayer.name) {
                     i.record=loadedPlayer.record
                     console.log(`${i.name} loaded record`,loadedPlayer.record)
                 }
             }
-            //now update the records for each default player
+
 
 
         } else {
@@ -498,6 +533,10 @@ const loadPlayerData = () => {
     return customPlayers
 }
 
+
+
+
+
 //=============================================Game flow=============================================//
 
 
@@ -510,7 +549,7 @@ let storage = localStorage
 
 //create/load player and bot instances 
 const leftBots = createBots()
-const rightBots = createBots() //legacy shit that I dont wanna fix so making two set of bots
+const rightBots = createBots() 
 
 const defaultLeft = new Player('Player 1','x','img/x.png',false,100,'Tickity Tackity')
 const defaultRight = new Player('Player 2','o','img/o.png',false,100,'1, 2, 3, 4, something something -AK')
@@ -549,16 +588,19 @@ updatePlayerPanels()
 
 
 
-//generate board of size, default 3
-document.getElementById('sizeInput').addEventListener('click',(e)=>{
-    let newSize = document.getElementById('sizeInput').value
-    if (size!==newSize) {
-        size=newSize
-        if (size>1) {
-            memo = {}
-            turnIndex = 0
-            generateBoard(size)
-        }
+
+
+
+document.getElementById('decreaseSize').addEventListener('click',(e)=> {
+    if (size > 2) {
+        size -=1
+        generateBoard(size)
+    }
+})
+document.getElementById('increaseSize').addEventListener('click',(e)=> {
+    if (size < 15) {
+        size +=1
+        generateBoard(size)
     }
 })
 
