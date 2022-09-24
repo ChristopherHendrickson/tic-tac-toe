@@ -1,3 +1,4 @@
+//CLASSES
 class Player {
     static instances = []
     constructor(name,symbol,symbolRef,isComputer,difficulty=9,catchPhrase='') {
@@ -9,17 +10,72 @@ class Player {
         this.isComputer = isComputer
         this.difficulty = difficulty
         this.score = 0
-        this.record = {} //whenever a player object versus an opponent, the opponent is added to .record (ley is opponents name) and incremeneted when they beat that player
+        this.record = {} //whenever a player object versus an opponent, the opponent is added to .record (key is opponents name) and incremeneted when they beat that player
         this.avatar = `img/${this.name}.png`
-        this.catchPhrase = catchPhrase  
+        this.catchPhrase = catchPhrase
+
         Player.instances.push(this)
     }
-
-
 }
 
 
+class Timer {
+    constructor(d,a) {
+        this.duration = d 
+        this.intervalID = ''
+        this.timeLeft = d
+        this.isActive = a
+        console.log(this.timeLeft)
+        console.log(this.duration)
+        console.log(this.isActive)
+    }
+
+    countDown() {
+        console.log(this.isActive,'active?')
+        if (this.isActive){
+            if (this.timeLeft === 0) {
+                document.querySelector('.timer').innerHTML = '0.0'
+                computerMove() //computerMove() calls timer.start so no need to do so here
+                return
+            } 
+            let displayVal = this.timeLeft
+            if (this.timeLeft > 5) {
+                displayVal = Math.floor(displayVal)
+            } else if (Number.isInteger(displayVal)) {
+                displayVal = displayVal.toString() + '.0'
+            }
+            document.querySelector('.timer').innerHTML = displayVal
+            this.timeLeft-=0.1
+            this.timeLeft = Math.floor((this.timeLeft+0.02)*10)/10
+        } else {
+            document.querySelector('.timer').innerHTML = ''
+            this.stop()
+        }
+    }
+
+    start() {
+        console.log('started')
+        clearInterval(this.intervalID)
+        this.timeLeft=this.duration
+        this.intervalID=setInterval(this.countDown.bind(this),100)
+    }
+    stop() {
+        clearInterval(this.intervalID)
+        document.querySelector('.timer').innerHTML = ''
+    }
+}
+
+class Settings {
+    constructor(vol=0.4,timerActive=false,timerDuration=10) {
+        this.vol = vol
+        this.timerActive = timerActive
+        this.timerDuration = timerDuration
+    }
+
+}
+
 class Node {
+    static instances = []
     constructor(id,row,col) {
         this.id='n'+id
         this.row=row
@@ -27,19 +83,20 @@ class Node {
         this.isOnLeftDiag = this.row === this.col ? true:false
         this.isOnRightDiag = this.row+this.col === size-1 ? true:false        
         this.symbol=null
+        Node.instances.push(this)
     }
     addNodeListener() {
         const nodeDiv = document.querySelector('#'+this.id)
-        const listenerFunction = ()=>{ //making this a named function so i can auto loop over when two bots vs eachother
-            console.log('=================================')
-            // console.log(players[turnIndex].isComputer)
+        const listenerFunction = ()=>{ 
             let result
+            timer.start()
             if (!playersPlaying[turnIndex].isComputer) {
                 result = move(playersPlaying[turnIndex],this) //move returns 'win'/'draw'
             }
             if (!result) {
                 if (playersPlaying[turnIndex].isComputer) {
                     setTimeout(computerMove,700)
+
                 }
             }
         }
@@ -47,11 +104,12 @@ class Node {
     }
 }
 
-
+//FUNCTIONS
 
 const generateBoard = (size=3) => {
     memo = {}
     turnIndex = 0
+    timer.stop()
     //adjust board grid to fit all the squares
     const boards = document.querySelectorAll('.board')
     const board = boards[0]
@@ -115,13 +173,11 @@ const generateBoard = (size=3) => {
 
 const move = (player,node) => {
     if (node.symbol === null) { 
+        
         nodeDiv = document.getElementById(node.id)
         nodeDiv.style.backgroundImage = `url(${player.symbolRef})`
         node.symbol = player.symbol
         player.audio.play()
-        // computerMove()
-        // console.log('actual List')
-        // console.log(nodeList)
         const leftPanel = document.querySelector('#leftPanel')
         const rightPanel = document.querySelector('#rightPanel')
         leftPanel.classList.toggle('turn')
@@ -134,22 +190,21 @@ const move = (player,node) => {
             updatePlayerRecords(player,playersPlaying[Math.abs(turnIndex-1)])
             updatePlayerPanels()
             savePlayerData()
+
             return result
         }   
         if (result === 'draw') {
             showDraw()
+
             return result
         }
         turnIndex = Math.abs(turnIndex-1) //bounces between 1 and 0
         return false
-
-
     }
 }
 
 
 const checkWin = (player,node) => {
-    // console.log(player)
     const symbolToCheck = player.symbol
     const row=winLines.winRows[node.row]
     const col=winLines.winCols[node.col]
@@ -197,7 +252,6 @@ const checkWin = (player,node) => {
         
         return 'win'
     } else if (totalCount===nodeList.length) {
-        // console.log('draw')
         return 'draw'
     }
 
@@ -208,6 +262,7 @@ const showWin = (player) => {
     //display result overlay
     //update player score
     //update local storage for player object
+    timer.stop()
     setTimeout(() => {
         const img = document.createElement('img')
         const overlay = document.querySelector('.outcomeOverlay')
@@ -224,6 +279,7 @@ const showWin = (player) => {
 
 const showDraw = () => {
 
+    timer.stop()
     setTimeout(() => {
         const overlay = document.querySelector('.outcomeOverlay')
         const content = document.querySelector('.content')
@@ -234,6 +290,10 @@ const showDraw = () => {
     },200)
 
 }
+
+
+
+
 
 
 const computerMove = () => {
@@ -322,7 +382,6 @@ const computerMove = () => {
 
         } else {
 
-            // console.log(gameState)
             let memoKey = ''
             gameState.forEach((e)=> {
                 memoKey+=e
@@ -365,7 +424,6 @@ const computerMove = () => {
                 }
             } else {
                 choice = memo[memoKey][0]
-                // console.log(Object.keys(memo).length)
                 return memo[memoKey][1]
             }
         }
@@ -377,9 +435,8 @@ const computerMove = () => {
     let choice
     getMove(initGameState,initPlayerIndex)
     loadGameState(initGameState,initPlayerIndex)
-    console.log(turnIndex)
     const result = move(playersPlaying[turnIndex],choice)
-
+    timer.start()
 
     //move function has now iterated turnInedex to the next player
     //if the next player is also a bot, continue calling computerMove until move returns a game ending result
@@ -430,6 +487,7 @@ const updatePlayers = (player0,player1) => {
 }
 
 const updatePlayerPanels = () => {
+    timer.stop()
     const leftPlayer = playersPlaying[0]
     const rightPlayer = playersPlaying[1]
     const leftimg = leftPlayer.avatar
@@ -445,8 +503,6 @@ const updatePlayerPanels = () => {
 
     let leftRecord = leftPlayer.record[rightPlayer.name]
     let rightRecord = rightPlayer.record[leftPlayer.name]
-    console.log(rightPlayer.name)
-    console.log(rightPlayer.record)
 
     //if these two players have never faced eachother, the record key does not exist yet, so create it and set it to 0
     if (leftRecord===undefined) {
@@ -476,7 +532,6 @@ const updatePlayerPanels = () => {
         rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>"${rightCatchPhrase}"</li>`
     }
 
-
     leftPanel.querySelector('.record').innerHTML = `Record vs ${rightPlayer.name}: ${leftRecord}`
     rightPanel.querySelector('.record').innerHTML=`Record vs ${leftPlayer.name}: ${rightRecord}`
 
@@ -488,9 +543,11 @@ const updatePlayerPanels = () => {
 
 const updatePlayerRecords = (winner,loser) => {
     winner.record[loser.name]+=1
-    console.log(winner.record[loser.name])
-    console.log(winner)
     console.log(loser)
+    console.log(winner)
+    console.log(winner.record[loser.name])
+    console.log(winner.record)
+
 }
 
 
@@ -501,7 +558,7 @@ const savePlayerData = () => {
     }
     stringPlayerData = JSON.stringify(playerData)
     storage.setItem('playerData',stringPlayerData)
-    console.log('playerData Saved')
+
 }
 
 
@@ -512,28 +569,56 @@ const loadPlayerData = () => {
     const customPlayers = {}
     for (let playerKey in playerDataObject) {
         let loadedPlayer=playerDataObject[playerKey]
-        if (defulatNames.includes(loadedPlayer.name)) {
+        if (defulatNames.includes(loadedPlayer.name)) { //if the player instance is one of the defaults, just update the necessary properties of the existing default objects
             for (i of Player.instances) {
                 if (i.name === loadedPlayer.name) {
                     i.record=loadedPlayer.record
-                    console.log(`${i.name} loaded record`,loadedPlayer.record)
                 }
             }
-
-
-
         } else {
             //create new player instance of custom players 
             let p = loadedPlayer
             let reloadedCustom = new Player(p.name,p.symbol,p.symbolRef,p.isComputer,p.difficulty,p.catchPhrase)
             customPlayers[reloadedCustom.name]=reloadedCustom
-            console.log(`${p.name} loaded record`)
         }
     }
     return customPlayers
 }
 
+const saveSettingsData = (settings) => {
+    storage.setItem('settingsData',JSON.stringify(settings))
+}
 
+const loadSettingsData = () => {
+    const settingsData = storage.getItem('settingsData')
+    let settings
+    if (settingsData !==null) {
+        console.log('loaded settings')
+        settings =  JSON.parse(settingsData)
+    } else {
+        settings = new Settings
+        console.log('created default settings')
+    }
+    document.querySelector('#volumeInput').value=settings.vol*100
+    document.querySelector('#timerDuration').value=settings.timerDuration
+    document.querySelector('#timerSwitch').checked=settings.timerActive
+    return settings
+}
+
+const updateSettings = () => {
+
+    //call this on load and on settings window close
+    currentSettings.vol=document.querySelector('#volumeInput').value/100
+    currentSettings.timerDuration=Math.max(document.querySelector('#timerDuration').value,2) //2 second minimum on timer interval
+    currentSettings.timerActive=document.querySelector('#timerSwitch').checked
+    for (i of Player.instances) {
+        i.audio.volume=currentSettings.vol
+    }
+    //update other settings
+    timer.duration = currentSettings.timerDuration
+    timer.isActive = currentSettings.timerActive
+    saveSettingsData(currentSettings)
+}
 
 
 
@@ -544,17 +629,15 @@ const loadPlayerData = () => {
 
 
 
-//GLOBALS
+//GLOBAL VARIABLES
 let storage = localStorage
 
-//create/load player and bot instances 
 const leftBots = createBots()
 const rightBots = createBots() 
 
-const defaultLeft = new Player('Player 1','x','img/x.png',false,100,'Tickity Tackity')
-const defaultRight = new Player('Player 2','o','img/o.png',false,100,'1, 2, 3, 4, something something -AK')
+const defaultLeft = new Player('Player 1','x','img/x.png',false,0,'Tickity Tackity')
+const defaultRight = new Player('Player 2','o','img/o.png',false,0,'1, 2, 3, 4, something something -AK')
 
-// loadCustomPlayers() make this function. also need a save custom players. Trigger on win (to update record), and on create.
 
 let playersPlaying = {
     '0':defaultLeft,
@@ -573,23 +656,17 @@ let winLines = {
 let size = 3
 let memo = {}
 
-generateBoard(size)
-
+const currentSettings = loadSettingsData()
 const customPlayers = loadPlayerData()
-console.log('custom players')
-console.log(customPlayers)
-
-
+const timer = new Timer(currentSettings.timerDuration,currentSettings.timerActive)
 savePlayerData()
 updatePlayerPanels()
+updateSettings()
+generateBoard(size)
+
 
 
 //EVENT LISTENERS
-
-
-
-
-
 
 document.getElementById('decreaseSize').addEventListener('click',(e)=> {
     if (size > 2) {
@@ -653,7 +730,7 @@ rightBotSwitch.addEventListener('click',(e)=>{
         updatePlayers(playersPlaying[0],rightPlayer) //retain Right hand player (players[1])
 
     } else {
-        updatePlayers(playersPlaying[0],defaultRight)//NEED TO UPDATE THIS FOR CUSTOM PLAYERS INSTEAD OF DEFAULT ONLY
+        updatePlayers(playersPlaying[0],defaultRight)
         //add default human player 2
     }
     generateBoard(size)
@@ -680,11 +757,55 @@ rightBotSelect.addEventListener('click',(e)=>{
 
 
 document.querySelector('.startScreen').addEventListener('click',(e)=>{
-
     document.querySelector('.startScreen').classList.add('hidden')
+    // document.querySelector('.startScreen').classList.remove('partial')
     leftPanel.classList.remove('hideLeft')
     rightPanel.classList.remove('hideRight')
     board.classList.remove('hidden')
 })
 
+document.querySelector('#settingsOpen').addEventListener('click',(e) => {
+    const settingsOverlay = document.querySelector('.settings')
+    const settingsContent = document.querySelector('.settingsContent')
+    const openGIF = document.createElement('img')
+    openGIF.setAttribute('id','scroll')
+    openGIF.src =  'img/scroll-open-gif.gif?q=' + new Date().getTime();
+    settingsOverlay.appendChild(openGIF)
+    settingsOverlay.classList.remove('hidden')
+    
 
+    setTimeout(() => {
+        settingsContent.classList.remove('hidden')
+    }, 200);
+
+    setTimeout(() => {
+        if (openGIF.src.includes("open")) {
+            openGIF.src='img/scroll.gif'
+        }
+    }, 600);
+})
+
+document.querySelector('#exitSettings').addEventListener('click',(e) => {
+    const settingsOverlay = document.querySelector('.settings')
+    const closeGIF = settingsOverlay.querySelector('#scroll')
+    const settingsContent = document.querySelector('.settingsContent')
+    updateSettings()
+    
+    settingsContent.classList.add('hidden')
+    closeGIF.src =  'img/scroll-close-gif.gif?q=' + new Date().getTime();
+
+    
+    setTimeout(() => {
+        settingsOverlay.querySelector('#scroll').remove()
+        settingsOverlay.classList.add('hidden')
+    }, 600);
+})
+
+
+document.querySelector('#timerSwitch').addEventListener('click',(e)=>{
+    console.log(e.target.checked)
+})
+
+document.querySelector('#volumeInput').addEventListener('click',(e)=>{
+    console.log(e.target.value)
+})

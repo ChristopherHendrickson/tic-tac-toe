@@ -12,19 +12,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Poiret+One&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="startScreen">
         <h1>TIC-TAC-TOE</h1>
         <h3>BY CHRIS</h3>
-        <h4>(click to Begin)</h4>
+        <h4>(Click to Begin)</h4>
     </div>
     <nav>
+        <img src="img/scroll-settings.png" id="settingsOpen"/>
     </nav>
+
     <section class="content">
+        <div class="timer"></div>
         <div class="playerPanel hideLeft turn" id="leftPanel">
             <img src='img/Player 1.png' class='avatar' id='leftavatar'/>
             <ul>
-                
+
             </ul>
             <span class="scoreSpan">
                 <p class="score">Score</p>
@@ -42,7 +46,7 @@
             <select class="botList" id="leftBotList"></select>
         </div>
 
-        <div class='board hidden'></div>
+        <div class='board'></div>
 
         <div class="playerPanel hideRight" id="rightPanel">
             <img src='img/player 2.png' class='avatar' id='rightavatar'/>
@@ -61,7 +65,7 @@
                 </label>
                 <p class="small justifyLeft">Bot</p>
             </span>
-            
+
             <select class="botList" id="rightBotList"></select>
 
         </div>
@@ -69,6 +73,7 @@
         <div class = "bottomPanel">
             <div class="sizer" id="decreaseSize"><p class="sizerText">-</p></div>
             <div class="sizer" id="increaseSize"><p class="sizerText">+</p></div>
+
         </div>
         
     </section>
@@ -80,8 +85,34 @@
         <h4>(Click to play again)</h4>
 
     </section>
-    <article>
 
-    </article>
+    <section class="settings hidden" id="settingsClose">
+        <div class="settingsContent hidden">
+            <h2>SETTINGS</h2>
+            <br>
+            <span class="settingsSpan">
+                <img src="img/exit.png" id="exitSettings"/>
+                <p class="settingsText">Volume</p>
+                <label class="settingsInput">
+                    <input type="range" id="volumeInput" min="0" max="100" value="40">
+                </label>
+                <p class="settingsText">Turn Limits</p>
+                
+                <label class="switch settingsInput">
+                    <input type="checkbox" id="timerSwitch">
+                    <span class="slider"></span>
+                </label>
+
+                <p class="settingsText">Turn Time Limit</p>
+                <label class="switch settingsInput">
+                    <input type="number" min="0" max="300" value="30" id="timerDuration">
+                </label>
+
+            </span>
+
+
+        </div>
+    </section>
+
 </body>
 </html>

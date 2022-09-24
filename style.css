@@ -20,7 +20,7 @@ button {
 
 
 body {
-    background-color:rgb(118,113,83);
+    background-color:rgb(122,95,68);
     color: white;
     overflow-y: hidden;
     overflow-x: hidden;
@@ -45,6 +45,7 @@ body {
     align-items: center;
     justify-content: center;
     transition: 1s ease-out;
+
 }
 
 .startScreen.hidden > * {
@@ -54,7 +55,9 @@ body {
 .startScreen.hidden {
     opacity: 0;
     z-index:-1;
+
 }
+
 
 
 .outcomeOverlay {
@@ -71,15 +74,12 @@ body {
     align-items:center;
     flex-direction: column;
     justify-content:center;
-
-
 }   
 
 .showOutcome {
     transition: 0.5s;
     transform: translateY(0);
     height:100vh;
-
 }
 
 
@@ -93,18 +93,134 @@ body {
     grid-template-rows: 1fr 1fr 1fr ;
     grid-gap: 5px;
     background-color: rgb(36,35,51);
-    grid-row: 1/2;
+    grid-row: 2/3;
     grid-column: 2/3;
     transition: 0.5s linear;
     cursor: var(--mousepoint)
 }
 
-
-
-
-.board.hidden {
-    grid-gap: 0;
+.settings {
+    position:absolute;
+    top:0;
+    display:flex;
+    flex-direction: row;
+    z-index:10;
+    background-color: rgb(20, 13, 7, 0.8);
+    width:100vw;
+    height:100vh;
+    align-items: center;
+    justify-content: center;
+    overflow-x:hidden
 }
+
+.settingsSpan {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    justify-content: center;
+}
+
+
+
+.settingsText {
+    font-size: 18px;
+    justify-content: right;
+    margin-right:15px;
+    margin-bottom:80px;
+    margin-top:6px;
+}
+
+.settingsInput {
+    position:relative;
+    left:80px;
+    width: 48px;
+    height: 26px;
+    min-height: 26px;;
+    
+  }
+
+#volumeInput {
+    box-sizing: border-box;
+    position:relative;
+    -webkit-appearance: none;
+    appearance: none;
+    max-width:48px;
+    height:26px;
+    background-image: url(img/switch-bg.png);
+    border: 3px solid black;
+    border-radius: 50px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background-image: url(img/switch.png);
+    background-position: center;
+    box-shadow: rgba(17, 17, 26, 1) -2px 2px 3px;
+}
+
+input[type=number] {
+    box-sizing: border-box;
+    border: 3px solid black;
+    width:48px;
+    background-image: url(img/switch-bg.png);
+    color: white;
+    text-align: center;
+    font-family: 'MedievalSharp', cursive;
+}
+
+
+
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+
+#exitSettings {
+    max-height: 30px;
+    position:absolute;
+    right:0;
+    top:30px;
+    cursor: var(--mousepoint)
+}
+
+.settings > img {
+    position:absolute;
+    z-index:-1;
+    height: 90vh;
+    min-width:500px;
+}
+
+.settings.hidden {
+    opacity: 0;
+    z-index:-1;
+    transition: 0.4s linear;
+}
+
+.settingsContent {
+    position:absolute;
+    top:20vh;
+    display:flex;
+    flex-direction: column;
+    justify-content:flex-start;
+    align-items: center;
+    overflow-y:hidden;
+    transition: 0.45s linear;
+    height: 65vh;
+    min-width:300px;
+}
+
+
+
+.settingsContent.hidden {
+    overflow-y:hidden;
+    height:0vh;
+    transition: 0.4s linear;
+}
+
+
+
 
 @media (max-width: 1300px){
     /* label > input[type="checkbox"] {
@@ -147,22 +263,34 @@ body {
     background-color: grey;
     background-size: contain;
     background-position: center;
-    background-color: rgb(118,113,83);
-    cursor: var(--mousepoint)
+    background-color: rgb(122,95,68);
+    cursor: var(--mousepoint);
 }
 
+#settingsOpen {
+    min-height: 100px;
+    max-height: 100px;
+    position:absolute;
+    top:10px;
+    left:10px;
+}
 
 nav {
+    min-height: 30px;
+    max-height: 30px;
     position:absolute;
     top:0;
     left:0;
     width:100vw;
     z-index:1;
     background-color: rgb(20, 13, 7);
+    background-color: transparent;
     margin: 0;
     margin-bottom: 40px;
-    padding: 10px;
+
+    object-fit: cover;
 }
+
 
 nav > * {
     z-index:10
@@ -197,14 +325,22 @@ p.justifyLeft {
 
 
 .content {
-    margin: 100px 80px 30px 80px;
+    margin: 60px 80px 30px 80px;
     transition:0.6s;
     display:grid; 
     grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows:  1fr auto;
+    grid-template-rows: auto 1fr auto;
 }
 
-
+.timer {
+    min-height:1em;
+    line-height: 1em;
+    font-size: 36px;
+    display:flex;
+    justify-content: space-around;
+    grid-row: 1/2;
+    grid-column: 2/3;
+}
 
 .hideContent {
     transition:0.2s ease-in;
@@ -214,10 +350,13 @@ p.justifyLeft {
 }
 
 h1 {
-    z-index: 2;
+
     font-size: 60px;
 }
 
+h2 {
+    font-size: 34px;
+}
 
 
 .playerPanel { 
@@ -267,7 +406,7 @@ h1 {
     }
   }
 
-  @keyframes glow {
+  @-webkit-keyframes glow {
     0% {
         box-shadow: rgba(17, 17, 26, 0.1) 0px 5px 0px 5px, rgba(17, 17, 26, 1) 0px 0px 10px;
     }
@@ -326,12 +465,12 @@ h1 {
 }
 
 #leftPanel {
-    grid-row: 1/3;
+    grid-row: 2/4;
     grid-column: 1/2;
 }
 
 #rightPanel {
-    grid-row: 1/3;
+    grid-row: 2/4;
     grid-column: 3/4;
 }
 
@@ -341,7 +480,7 @@ h1 {
     justify-content:center;
     align-items:center;
     height: 3em;
-    grid-row: 2/3;
+    grid-row: 3/4;
     grid-column: 2/3;
 }
 
@@ -352,7 +491,6 @@ h1 {
     height:30px;
     width:30px;
     margin: 0px 10px;
-
     align-items: center;
     line-height: 30px;
     text-align: center;
@@ -391,15 +529,11 @@ h1 {
     visibility: visible;
 }
 
-#botList {
-    min-width:100%;
-}
 
 select {
     min-width: 100px;
     text-align: center;
     color:black;
-    
     background-color: rgb(184,146,92);
     background-position-x: -100px;
     background-position-y: -100px;
@@ -416,11 +550,14 @@ select {
 .switch {
 
     position: relative;
-    display: inline-block;
+    display: block;
     width: 48px;
     height: 26px;
-
+    min-height: 26px;;
+        
   }
+
+
   
   .slider {
 
@@ -456,9 +593,7 @@ select {
 
   }
   
-  input:checked + .slider {
-    background-color: #5b5b5b;
-  }
+  
   
   
   input:checked + .slider:before {
@@ -472,6 +607,5 @@ select {
   input[type="checkbox"] {
     position:absolute;
     visibility:hidden;
-    top: 30%;
-    left: 50%;
   }
+
