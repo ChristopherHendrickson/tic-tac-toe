@@ -88,7 +88,10 @@ class Node {
     addNodeListener() {
         const nodeDiv = document.querySelector('#'+this.id)
         const listenerFunction = ()=>{ 
-            let result
+            let result = true //being set to true prevents a bug when a player spams lots of nodes quickly 
+            if (playersPlaying[0].isComputer & playersPlaying[1].isComputer) {
+                result = false //If two bots are playing result = true will not let the game begin
+            } 
             timer.start()
             if (!playersPlaying[turnIndex].isComputer) {
                 result = move(playersPlaying[turnIndex],this) //move returns 'win'/'draw'
@@ -96,7 +99,6 @@ class Node {
             if (!result) {
                 if (playersPlaying[turnIndex].isComputer) {
                     setTimeout(computerMove,700)
-
                 }
             }
         }
@@ -543,11 +545,6 @@ const updatePlayerPanels = () => {
 
 const updatePlayerRecords = (winner,loser) => {
     winner.record[loser.name]+=1
-    console.log(loser)
-    console.log(winner)
-    console.log(winner.record[loser.name])
-    console.log(winner.record)
-
 }
 
 
@@ -558,7 +555,6 @@ const savePlayerData = () => {
     }
     stringPlayerData = JSON.stringify(playerData)
     storage.setItem('playerData',stringPlayerData)
-
 }
 
 
