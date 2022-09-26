@@ -561,7 +561,6 @@ const computerMove = () => {
             }
         }
     }
-    const minRow = Math.min(...nodeList.map(n => n.symbol!=null ? n.row : 6 ))
 
     const initGameState = getGameState()
     const initTurnIndex = turnIndex 
