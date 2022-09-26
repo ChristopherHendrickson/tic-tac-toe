@@ -89,8 +89,8 @@ class Node {
         const nodeDiv = document.querySelector('#'+this.id)
         const listenerFunction = ()=>{ 
             let result = true //being set to true prevents a bug when a player spams lots of nodes quickly 
-            if (playersPlaying[0].isComputer & playersPlaying[1].isComputer) {
-                result = false //If two bots are playing result = true will not let the game begin
+            if (playersPlaying[0].isComputer) {
+                result = false //If player[0] is a bot result = true will not let the game begin
             } 
             timer.start()
             if (!playersPlaying[turnIndex].isComputer) {
@@ -250,7 +250,6 @@ const checkWin = (player,node) => {
 
     const longestLine = Math.max(rowCount,colCount,leftDiagCount,rightDiagCount)
     if (longestLine===parseInt(size)) {
-        //
         
         return 'win'
     } else if (totalCount===nodeList.length) {
@@ -353,7 +352,7 @@ const computerMove = () => {
             if (e<min) {
                 min=e
                 minIndex=count
-            } else if (e===min) { // add some randomness
+            } else if (e===min) { // add some randomness to equally scored moves
                 minIndex = Math.random()>0.1 ? minIndex : count
             }
             count++
@@ -394,7 +393,7 @@ const computerMove = () => {
                 const moves = []
                 let node
                 const currentPlayer = playersPlaying[playerState]
-                for (let i = 0; i < nodeList.length ; i++) {
+                for (let i = 0; i < nodeList.length ; i++) { //update this to a list of possible playable nodes rather than all nodes from a new function. Create a new checkWin function for a connect 4. Should be able to then re-use this for a connect 4 bot
                     loadGameState(gameState,playerState)
                     node = nodeList[i]
                     if (node.symbol===null) {
@@ -414,7 +413,7 @@ const computerMove = () => {
                     maxScoreIndex = getMaxIndex(scores)
                     choice = moves[maxScoreIndex]
                     memo[memoKey]=[choice,(scores[maxScoreIndex]+scores.reduce((a, b) => a + b,0) / scores.length**3)*0.9] 
-                    // in the above, *0.9 encourages the bot to prolong losses and take faster wins, by reducing the impact of deeper recursive calls.  
+                    // in the above, *0.9 encourages the bot to prolong losses and take faster wins, by reducing the score (less negative for later losses and more positive for sooner wins) of deeper recursive calls.  
                     //by adding a portion of the average result to the final score (the reduce function), the bot favours moves that have more winning outcomes even if they are technically draws/losses against a perfect opponent. This makes the bot more aggresively try get three in a row
                     return memo[memoKey][1]
                 } else {
@@ -565,7 +564,7 @@ const loadPlayerData = () => {
     const customPlayers = {}
     for (let playerKey in playerDataObject) {
         let loadedPlayer=playerDataObject[playerKey]
-        if (defulatNames.includes(loadedPlayer.name)) { //if the player instance is one of the defaults, just update the necessary properties of the existing default objects
+        if (defulatNames.includes(loadedPlayer.name)) { //if the player instance is one of the defaults, just update the necessary properties of the existing default objects (the score record)
             for (i of Player.instances) {
                 if (i.name === loadedPlayer.name) {
                     i.record=loadedPlayer.record
