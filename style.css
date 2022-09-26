@@ -476,14 +476,36 @@ h2 {
 }
 
 .bottomPanel {
+    display:grid;
+    grid-template-columns: 60%;
+    grid-template-rows: 1fr 1fr;
+    justify-content:space-evenly;
+    align-items:center;
+    min-height: 3em;
+    grid-row: 3/4;
+    grid-column: 2/3;
+    min-width: 100%;
+}
+.sizerPanel {
     display:flex;
     flex-direction: row;
     justify-content:center;
     align-items:center;
     height: 3em;
-    grid-row: 3/4;
-    grid-column: 2/3;
+    grid-column: 1/2;
 }
+
+.gameSwitch {
+    display:flex;
+    flex-direction: row;
+    justify-content: space-around;
+    overflow:auto;
+    min-width:50%;
+}
+
+
+
+
 
 .sizer {
     border:3px solid black;
@@ -494,7 +516,10 @@ h2 {
     margin: 0px 10px;
     align-items: center;
     line-height: 30px;
+    min-height:1em;
     text-align: center;
+    cursor: var(--mousepoint);
+    
 }
 
 .sizer > p {
@@ -507,6 +532,7 @@ h2 {
     left:-1px;
     color:black;
     margin:0;
+    cursor: var(--mousepoint);
 
     -moz-user-select: none;
     -khtml-user-select: none;

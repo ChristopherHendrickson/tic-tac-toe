@@ -1,7 +1,7 @@
 //CLASSES
 class Player {
     static instances = []
-    constructor(name,symbol,symbolRef,isComputer,difficulty=9,catchPhrase='') {
+    constructor(name,symbol,symbolRef,isComputer,difficulty=0,depth=0,catchPhrase='') {
         this.name = name
         this.symbol = symbol
         this.symbolRef = symbolRef
@@ -9,6 +9,7 @@ class Player {
         this.audio.volume = 0.4
         this.isComputer = isComputer
         this.difficulty = difficulty
+        this.depth=depth
         this.score = 0
         this.record = {} //whenever a player object versus an opponent, the opponent is added to .record (key is opponents name) and incremeneted when they beat that player
         this.avatar = `img/${this.name}.png`
@@ -25,13 +26,9 @@ class Timer {
         this.intervalID = ''
         this.timeLeft = d
         this.isActive = a
-        console.log(this.timeLeft)
-        console.log(this.duration)
-        console.log(this.isActive)
     }
 
     countDown() {
-        console.log(this.isActive,'active?')
         if (this.isActive){
             if (this.timeLeft === 0) {
                 document.querySelector('.timer').innerHTML = '0.0'
@@ -54,7 +51,6 @@ class Timer {
     }
 
     start() {
-        console.log('started')
         clearInterval(this.intervalID)
         this.timeLeft=this.duration
         this.intervalID=setInterval(this.countDown.bind(this),100)
@@ -98,6 +94,7 @@ class Node {
             }
             if (!result) {
                 if (playersPlaying[turnIndex].isComputer) {
+                    timer.stop()
                     setTimeout(computerMove,700)
                 }
             }
@@ -113,9 +110,7 @@ const generateBoard = (size=3) => {
     turnIndex = 0
     timer.stop()
     //adjust board grid to fit all the squares
-    const boards = document.querySelectorAll('.board')
-    const board = boards[0]
-    const outcomeBoard = boards[1]
+    const board = document.querySelector('.board')
     board.innerHTML=''
     frString = '1fr '.repeat(size)
     nodeList=[]
@@ -175,7 +170,18 @@ const generateBoard = (size=3) => {
 
 const move = (player,node) => {
     if (node.symbol === null) { 
-        
+        //adding check for connect 4 and handling move differnetly 
+        numMoves+=1
+        if (gameChoice==='c4') {
+            //find the lowest empty node in the column that was selected, overwrite input node with this node.
+            selectedCol = node.col
+            for (n of nodeList) {
+                if (n.col===selectedCol & n.row > node.row & n.symbol===null) {
+                    node = n
+                }
+            }
+        }
+
         nodeDiv = document.getElementById(node.id)
         nodeDiv.style.backgroundImage = `url(${player.symbolRef})`
         node.symbol = player.symbol
@@ -185,7 +191,9 @@ const move = (player,node) => {
         leftPanel.classList.toggle('turn')
         rightPanel.classList.toggle('turn')
 
-        const result = checkWin(player,node)
+        const result = checkWin(player,node) // edit checkWin to handle connect4
+
+
         if (result === 'win') {
             player.score+=1
             showWin(player)
@@ -205,54 +213,161 @@ const move = (player,node) => {
     }
 }
 
+const randomMove = () => {
+    
+}
 
 const checkWin = (player,node) => {
-    const symbolToCheck = player.symbol
-    const row=winLines.winRows[node.row]
-    const col=winLines.winCols[node.col]
-    const leftDiag=winLines.winDiags.left
-    const rightDiag=winLines.winDiags.right
-    let rowCount = 0
-    let colCount = 0
-    let leftDiagCount = 0
-    let rightDiagCount = 0
-    let totalCount = 0
-    for (n of row) {
-        if (n.symbol===symbolToCheck) {
-            rowCount+=1
-        }
-    }
-    for (n of col) {
-        if (n.symbol===symbolToCheck) {
-            colCount+=1
-        }
-    }
-    if (node.isOnLeftDiag) { //only check diagonal win if clicked node was on a diagonal
-        for (n of leftDiag) {
+    //Keeping exitsting win check for tic-tac-toe the same. Adding secondary function within checkWin for connect-4
+    if (gameChoice === "tic") {
+        const symbolToCheck = player.symbol
+        const row=winLines.winRows[node.row]
+        const col=winLines.winCols[node.col]
+        const leftDiag=winLines.winDiags.left
+        const rightDiag=winLines.winDiags.right
+        let rowCount = 0
+        let colCount = 0
+        let leftDiagCount = 0
+        let rightDiagCount = 0
+        let totalCount = 0
+        for (n of row) {
             if (n.symbol===symbolToCheck) {
-                leftDiagCount+=1
+                rowCount+=1
             }
         }
-    }
-    if (node.isOnRightDiag) { //only check diagonal win if clicked node was on a diagonal
-        for (n of rightDiag) {
+        for (n of col) {
             if (n.symbol===symbolToCheck) {
-                rightDiagCount+=1
+                colCount+=1
             }
         }
-    }
+        if (node.isOnLeftDiag) { //only check diagonal win if clicked node was on a diagonal
+            for (n of leftDiag) {
+                if (n.symbol===symbolToCheck) {
+                    leftDiagCount+=1
+                }
+            }
+        }
+        if (node.isOnRightDiag) { //only check diagonal win if clicked node was on a diagonal
+            for (n of rightDiag) {
+                if (n.symbol===symbolToCheck) {
+                    rightDiagCount+=1
+                }
+            }
+        }
 
-    for (n of nodeList) { // draw check
+        for (n of nodeList) { // draw check
+            if (n.symbol !== null) {
+                totalCount+=1
+            }
+        }
+
+        const longestLine = Math.max(rowCount,colCount,leftDiagCount,rightDiagCount)
+        if (longestLine===parseInt(size)) {
+            
+            return 'win'
+        } 
+    } else {//win checking for connect 4. check in all directions from clicked node for 4 in a row
+        //check left and right
+        let longestLine = 0
+        const col = node.col
+        const row = node.row
+        let horizintalNodes = []
+        let verticalNodes = []
+        let diagonalLeftNodes = []
+        let diagonalRightNodes = []
+        
+        //add horizontal nodes to check
+        for (let i = -3; i<=3;i++) {
+            if (col+i >= 0 & col+i <= size-1) {
+                let validNode = nodeList.find(e=>e.row===row & e.col===col+i)
+                horizintalNodes.push(validNode)
+            }
+        }
+        //add vertical nodes to check (only need to check below)
+        for (let i = 0; i<=3;i++) {
+            if(row+i <= size-1) {
+                let validNode = nodeList.find(e=>e.col===col & e.row===row+i)
+                verticalNodes.push(validNode)
+            }
+        }
+        
+        //add diagonal leftward nodes to check
+        for (let i = -3; i<=3;i++) {
+            if (col+i >= 0 & col+i <= size-1 & row+i >= 0 & row+i <= size-1) {
+                let validNode = nodeList.find(e=>e.row===row+i & e.col===col+i)
+                diagonalLeftNodes.push(validNode)
+            }
+        }
+
+        //add diagonal rightward ndoes to check
+        for (let i = -3; i<=3;i++) {
+            if (col-i >= 0 & col-i <= size-1 & row+i >= 0 & row+i <= size-1) {
+                let validNode = nodeList.find(e=>e.row===row+i & e.col===col-i)
+                diagonalRightNodes.push(validNode)
+            }
+        }
+
+
+        //check longest line in horizontals
+        for (n of horizintalNodes) {
+            if (n.symbol===player.symbol) {
+                longestLine+=1
+                if (longestLine >= 4) {
+                    return 'win'
+                }
+            } else {
+                longestLine = 0
+            }
+        }
+        longestLine = 0
+
+        //check longest line in vertical
+        for (n of verticalNodes) {
+
+            if (n.symbol===player.symbol) {
+                longestLine+=1
+                if (longestLine >= 4) {
+                    return 'win'
+                }
+            } else {
+                longestLine = 0
+            }
+        }
+        longestLine = 0
+        //check longest line in left Diagonal
+        for (n of diagonalLeftNodes) {
+            if (n.symbol===player.symbol) {
+                longestLine+=1
+                if (longestLine >= 4) {
+                    return 'win'
+                }
+            } else {
+                longestLine = 0
+            }
+        }
+        longestLine = 0
+        //check longest line in right Diagonal
+        for (n of diagonalRightNodes) {
+            if (n.symbol===player.symbol) {
+                longestLine+=1
+                if (longestLine >= 4) {
+                    return 'win'
+                }
+            } else {
+                longestLine = 0
+            }
+        }
+
+
+    }
+    //check for draw
+    let totalCount = 0
+    for (n of nodeList) { 
         if (n.symbol !== null) {
             totalCount+=1
         }
     }
-
-    const longestLine = Math.max(rowCount,colCount,leftDiagCount,rightDiagCount)
-    if (longestLine===parseInt(size)) {
-        
-        return 'win'
-    } else if (totalCount===nodeList.length) {
+    if (totalCount===nodeList.length) {
         return 'draw'
     }
 
@@ -298,7 +413,7 @@ const showDraw = () => {
 
 
 const computerMove = () => {
-    
+    timer.stop()
     const getGameState = () => {
         return nodeList.map((node) => {
             return node.symbol 
@@ -316,7 +431,7 @@ const computerMove = () => {
     
     const getScore = (player,node) => {
         if (checkWin(player,node)==='win') {
-            if (player===playersPlaying[initPlayerIndex]) {
+            if (player===playersPlaying[initTurnIndex]) {
                 return 100
             } else {
                 return -100
@@ -370,11 +485,13 @@ const computerMove = () => {
         return count
     }
 
-    const getMove = (gameState,playerState) => {
+    const getMove = (gameState,playerState,d) => {
 
-        if (countNullNodes(gameState)>initPlayer.difficulty) { //this code is implemented to reduce bot runtimes at large board sizes
+        if (gameChoice === 'c4' & d > depth) { //implementing depth for connect 4 mini max. 
+            return 0
+        }
+        if (countNullNodes(gameState)>initPlayer.difficulty/(gameChoice==='tic' ? 100 : 1)) { //this code is implemented to reduce bot runtimes at large board sizes
             //depth can be adjusted as a difficulty. bot plays randomly unitl there are 'difficulty' no. of unfilled squres remainng. (i.e 9=full depth in 3x3, 0 = full random)
-            console.log('choice was random')
             let randomChoice = Math.floor(Math.random()*nodeList.length)
             do {
                 randomChoice = Math.floor(Math.random()*nodeList.length)
@@ -388,61 +505,80 @@ const computerMove = () => {
                 memoKey+=e
             })
             memoKey+=toString(initPlayer)
+            if (gameChoice === "c4"){
+                memoKey+=numMoves //recalculate same states at deeper depths.
+            }
             if (!(memoKey in memo)) {
                 const scores = []
                 const moves = []
                 let node
                 const currentPlayer = playersPlaying[playerState]
-                for (let i = 0; i < nodeList.length ; i++) { //update this to a list of possible playable nodes rather than all nodes from a new function. Create a new checkWin function for a connect 4. Should be able to then re-use this for a connect 4 bot
-                    loadGameState(gameState,playerState)
+                for (let i = 0; i < nodeList.length ; i++) {
+                    loadGameState(gameState,playerState) 
                     node = nodeList[i]
+                    //if the node below the one its checking is null, skip it
+                    if (gameChoice === 'c4') {
+                        let nodeBelow = nodeList.find(e=>parseInt(e.id.slice(1))===parseInt(node.id.slice(1))+size)
+                        if (nodeBelow !== undefined) {
+                            if (nodeBelow.symbol === null) {//dont check nodes that cant be played in
+                                continue
+                            }
+                        }
+                    }
                     if (node.symbol===null) {
                         node.symbol=currentPlayer.symbol
-                        if (getScore(currentPlayer,node)!==0) { 
+                        let currentScore = getScore(currentPlayer,node) 
+                        if (currentScore!==0) { 
                             choice = node
-                            memo[memoKey]=[choice,getScore(currentPlayer,node)]
+                            memo[memoKey]=[choice,currentScore]
                             
                             return getScore(currentPlayer,node)
                         }
         
                         moves.push(node) 
-                        scores.push(getMove(getGameState(),Math.abs(playerState-1)))
+                        scores.push(getMove(getGameState(),Math.abs(playerState-1),d+1))
                     } 
                 } 
-                if (currentPlayer===playersPlaying[initPlayerIndex]) {
+
+                if (currentPlayer===playersPlaying[initTurnIndex]) {
                     maxScoreIndex = getMaxIndex(scores)
                     choice = moves[maxScoreIndex]
-                    memo[memoKey]=[choice,(scores[maxScoreIndex]+scores.reduce((a, b) => a + b,0) / scores.length**3)*0.9] 
+                    memo[memoKey]=[choice,(scores[maxScoreIndex]+(scores.reduce((a, b) => a + b,0) / scores.length**3))*0.95] 
                     // in the above, *0.9 encourages the bot to prolong losses and take faster wins, by reducing the score (less negative for later losses and more positive for sooner wins) of deeper recursive calls.  
                     //by adding a portion of the average result to the final score (the reduce function), the bot favours moves that have more winning outcomes even if they are technically draws/losses against a perfect opponent. This makes the bot more aggresively try get three in a row
                     return memo[memoKey][1]
                 } else {
                     minScoreIndex = getMinIndex(scores)
                     choice = moves[minScoreIndex]
-                    memo[memoKey]=[choice,(scores[minScoreIndex]+scores.reduce((a, b) => a + b,0) / scores.length**3)*0.9]
+                    memo[memoKey]=[choice,(scores[minScoreIndex]+(scores.reduce((a, b) => a + b,0) / scores.length**3))*0.95]
                     return memo[memoKey][1]
 
                 }
             } else {
+
                 choice = memo[memoKey][0]
                 return memo[memoKey][1]
             }
         }
     }
+    const minRow = Math.min(...nodeList.map(n => n.symbol!=null ? n.row : 6 ))
 
     const initGameState = getGameState()
-    const initPlayerIndex = turnIndex 
+    const initTurnIndex = turnIndex 
     const initPlayer = playersPlaying[turnIndex]
+    const depth = initPlayer.depth
     let choice
-    getMove(initGameState,initPlayerIndex)
-    loadGameState(initGameState,initPlayerIndex)
+    getMove(initGameState,initTurnIndex,0)
+    loadGameState(initGameState,initTurnIndex)
     const result = move(playersPlaying[turnIndex],choice)
-    timer.start()
+
 
     //move function has now iterated turnInedex to the next player
     //if the next player is also a bot, continue calling computerMove until move returns a game ending result
     if (!result & playersPlaying[turnIndex].isComputer) {
         setTimeout(computerMove,900)
+    } else if (!result) {
+        timer.start()
     }
 
 }
@@ -451,9 +587,9 @@ const computerMove = () => {
 const createBots = () => {
     const symbol = 'x'
     const botList = {}
-    botList['Philip']=(new Player('Philip',symbol,`img/${symbol}.png`,true,0))
-    botList['Laika']=(new Player('Laika',symbol,`img/${symbol}.png`,true,7))
-    botList['Burke']=(new Player('Burke',symbol,`img/${symbol}.png`,true,13))
+    botList['Philip']=(new Player('Philip',symbol,`img/${symbol}.png`,true,100,1))
+    botList['Laika']=(new Player('Laika',symbol,`img/${symbol}.png`,true,600,2))
+    botList['Burke']=(new Player('Burke',symbol,`img/${symbol}.png`,true,5000,6))
     
     const htmlLeftSelect = document.querySelector(`#leftBotList`)
     const htmlRightSelect = document.querySelector(`#rightBotList`)
@@ -495,8 +631,8 @@ const updatePlayerPanels = () => {
     const rightimg = rightPlayer.avatar
     const leftName = leftPlayer.name + (leftPlayer.isComputer ? ' <span class = medium>(Computer)</p>' : '')
     const rightName = rightPlayer.name + (rightPlayer.isComputer ? ' <span class = medium>(Computer)</p>' : '')
-    const leftDifficultyDescription = leftPlayer.difficulty < 4 ? 'Novice' : leftPlayer.difficulty < 9 ? 'Intermediate' : 'Master'
-    const rightDifficultyDescription = rightPlayer.difficulty < 4 ? 'Novice' : rightPlayer.difficulty < 9 ? 'Intermediate' : 'Master'
+    const leftDifficultyDescription = leftPlayer.difficulty < 40 ? 'Novice' : leftPlayer.difficulty < 90 ? 'Intermediate' : 'Master'
+    const rightDifficultyDescription = rightPlayer.difficulty < 40 ? 'Novice' : rightPlayer.difficulty < 90 ? 'Intermediate' : 'Master'
     const leftCatchPhrase = leftPlayer.catchPhrase
     const rightCatchPhrase = rightPlayer.catchPhrase
     const leftScore = leftPlayer.score
@@ -629,9 +765,10 @@ let storage = localStorage
 
 const leftBots = createBots()
 const rightBots = createBots() 
+let numMoves = 0
 
-const defaultLeft = new Player('Player 1','x','img/x.png',false,0,'Tickity Tackity')
-const defaultRight = new Player('Player 2','o','img/o.png',false,0,'1, 2, 3, 4, something something -AK')
+const defaultLeft = new Player('Player 1','x','img/x.png',false,0,0,'Tickity Tackity')
+const defaultRight = new Player('Player 2','o','img/o.png',false,0,0,'1, 2, 3, 4, something something -AK')
 
 
 let playersPlaying = {
@@ -654,6 +791,7 @@ let memo = {}
 const currentSettings = loadSettingsData()
 const customPlayers = loadPlayerData()
 const timer = new Timer(currentSettings.timerDuration,currentSettings.timerActive)
+let gameChoice = 'tic'
 savePlayerData()
 updatePlayerPanels()
 updateSettings()
@@ -705,7 +843,6 @@ leftBotSwitch.addEventListener('click',(e)=>{
         //means we are adding a bot
         const botName = leftBotSelect.value
         const leftPlayer = leftBots[botName]
-        console.log(leftPlayer)
         updatePlayers(leftPlayer,playersPlaying[1]) //retain Right hand player (players[1])
     } else {
         updatePlayers(defaultLeft,playersPlaying[1])//ditto below
@@ -721,7 +858,6 @@ rightBotSwitch.addEventListener('click',(e)=>{
         //means we are adding a bot
         const botName = rightBotSelect.value
         const rightPlayer = rightBots[botName]
-        console.log(rightPlayer)
         updatePlayers(playersPlaying[0],rightPlayer) //retain Right hand player (players[1])
 
     } else {
@@ -797,10 +933,16 @@ document.querySelector('#exitSettings').addEventListener('click',(e) => {
 })
 
 
-document.querySelector('#timerSwitch').addEventListener('click',(e)=>{
-    console.log(e.target.checked)
-})
+document.querySelector('#c4button').addEventListener('click',(e)=>{
+    if (gameChoice==='tic') {
+        gameChoice = 'c4'
+        size = 7
+        generateBoard(size)
+    } else {
+        gameChoice = 'tic'
+        size = 3
+        generateBoard(size)
 
-document.querySelector('#volumeInput').addEventListener('click',(e)=>{
-    console.log(e.target.value)
+    }
+
 })
