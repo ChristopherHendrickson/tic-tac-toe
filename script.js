@@ -630,8 +630,8 @@ const updatePlayerPanels = () => {
     const rightimg = rightPlayer.avatar
     const leftName = leftPlayer.name + (leftPlayer.isComputer ? ' <span class = medium>(Computer)</p>' : '')
     const rightName = rightPlayer.name + (rightPlayer.isComputer ? ' <span class = medium>(Computer)</p>' : '')
-    const leftDifficultyDescription = leftPlayer.difficulty < 40 ? 'Novice' : leftPlayer.difficulty < 90 ? 'Intermediate' : 'Master'
-    const rightDifficultyDescription = rightPlayer.difficulty < 40 ? 'Novice' : rightPlayer.difficulty < 90 ? 'Intermediate' : 'Master'
+    const leftDifficultyDescription = leftPlayer.difficulty < 400 ? 'Novice' : leftPlayer.difficulty < 900 ? 'Intermediate' : 'Master'
+    const rightDifficultyDescription = rightPlayer.difficulty < 400 ? 'Novice' : rightPlayer.difficulty < 900 ? 'Intermediate' : 'Master'
     const leftCatchPhrase = leftPlayer.catchPhrase
     const rightCatchPhrase = rightPlayer.catchPhrase
     const leftScore = leftPlayer.score
@@ -659,13 +659,13 @@ const updatePlayerPanels = () => {
     if (leftPlayer.isComputer) {
         leftPanel.querySelector('ul').innerHTML = `<li>${leftName}</li><li>${leftDifficultyDescription}</li>`
     } else {
-        leftPanel.querySelector('ul').innerHTML = `<li>${leftName}</li><li>"${leftCatchPhrase}"</li>`
+        leftPanel.querySelector('ul').innerHTML = `<li>${leftName}</li><li>${leftCatchPhrase}</li>`
     }
     
     if (rightPlayer.isComputer) {
         rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>${rightDifficultyDescription}</li>`
     } else {
-        rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>"${rightCatchPhrase}"</li>`
+        rightPanel.querySelector('ul').innerHTML = `<li>${rightName}</li><li>${rightCatchPhrase}</li>`
     }
 
     leftPanel.querySelector('.record').innerHTML = `Record vs ${rightPlayer.name}: ${leftRecord}`
@@ -766,8 +766,8 @@ const leftBots = createBots()
 const rightBots = createBots() 
 let numMoves = 0
 
-const defaultLeft = new Player('Player 1','x','img/x.png',false,0,0,'Tickity Tackity')
-const defaultRight = new Player('Player 2','o','img/o.png',false,0,0,'1, 2, 3, 4, something something -AK')
+const defaultLeft = new Player('Player 1','x','img/x.png',false,0,0)
+const defaultRight = new Player('Player 2','o','img/o.png',false,0,0)
 
 
 let playersPlaying = {
