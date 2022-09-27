@@ -109,13 +109,19 @@ const generateBoard = (size=3) => {
     memo = {}
     turnIndex = 0
     timer.stop()
+    let height = size
+    if (gameChoice==='c4') { //connect 4 is 7x6
+        height = 6
+    }
     //adjust board grid to fit all the squares
     const board = document.querySelector('.board')
     board.innerHTML=''
-    frString = '1fr '.repeat(size)
+    frStringRows = '1fr '.repeat(height)
+    frStringCols = '1fr '.repeat(size)
     nodeList=[]
-    board.style.gridTemplateColumns = frString
-    board.style.gridTemplateRows = frString
+    board.style.gridTemplateRows = frStringRows
+    board.style.gridTemplateColumns = frStringCols
+
 
     const leftPanel = document.querySelector('#leftPanel')
     const rightPanel = document.querySelector('#rightPanel')
@@ -129,7 +135,7 @@ const generateBoard = (size=3) => {
         winDiags: {},
     }
     //add empty lists
-    for (let row=0;row<size;row++) {
+    for (let row=0;row<height;row++) {
         winLines.winRows[row]=[]
     }
     for (let col=0;col<size;col++) {
@@ -139,10 +145,13 @@ const generateBoard = (size=3) => {
     winLines.winDiags.left=[]
     winLines.winDiags.right=[]
     //create nodes and add html representations to the DOM
-    for (let row=0;row<size;row++) {
+    for (let row=0;row<height;row++) {
 
         for (let col=0;col<size;col++) {
             let node = new Node(row*size+col,row,col)
+            console.log(row)
+            console.log(col)
+            console.log(node)
             let nodeDiv = document.createElement('div')
             nodeList.push(node)
             nodeDiv.classList.add('node')
@@ -285,7 +294,7 @@ const checkWin = (player,node) => {
         }
         //add vertical nodes to check (only need to check below)
         for (let i = 0; i<=3;i++) {
-            if(row+i <= size-1) {
+            if(row+i <= size-2) {
                 let validNode = nodeList.find(e=>e.col===col & e.row===row+i)
                 verticalNodes.push(validNode)
             }
@@ -293,7 +302,7 @@ const checkWin = (player,node) => {
         
         //add diagonal leftward nodes to check
         for (let i = -3; i<=3;i++) {
-            if (col+i >= 0 & col+i <= size-1 & row+i >= 0 & row+i <= size-1) {
+            if (col+i >= 0 & col+i <= size-1 & row+i >= 0 & row+i <= size-2) {
                 let validNode = nodeList.find(e=>e.row===row+i & e.col===col+i)
                 diagonalLeftNodes.push(validNode)
             }
@@ -301,7 +310,7 @@ const checkWin = (player,node) => {
 
         //add diagonal rightward ndoes to check
         for (let i = -3; i<=3;i++) {
-            if (col-i >= 0 & col-i <= size-1 & row+i >= 0 & row+i <= size-1) {
+            if (col-i >= 0 & col-i <= size-1 & row+i >= 0 & row+i <= size-2) {
                 let validNode = nodeList.find(e=>e.row===row+i & e.col===col-i)
                 diagonalRightNodes.push(validNode)
             }
@@ -323,7 +332,6 @@ const checkWin = (player,node) => {
 
         //check longest line in vertical
         for (n of verticalNodes) {
-
             if (n.symbol===player.symbol) {
                 longestLine+=1
                 if (longestLine >= 4) {
@@ -588,7 +596,7 @@ const createBots = () => {
     const botList = {}
     botList['Philip']=(new Player('Philip',symbol,`img/${symbol}.png`,true,100,1))
     botList['Laika']=(new Player('Laika',symbol,`img/${symbol}.png`,true,600,2))
-    botList['Burke']=(new Player('Burke',symbol,`img/${symbol}.png`,true,5000,6))
+    botList['Burke']=(new Player('Burke',symbol,`img/${symbol}.png`,true,1300,6))
     
     const htmlLeftSelect = document.querySelector(`#leftBotList`)
     const htmlRightSelect = document.querySelector(`#rightBotList`)
@@ -935,10 +943,16 @@ document.querySelector('#exitSettings').addEventListener('click',(e) => {
 document.querySelector('#c4button').addEventListener('click',(e)=>{
     if (gameChoice==='tic') {
         gameChoice = 'c4'
+        document.querySelectorAll('.sizer').forEach((e)=>{
+            e.style.display='none'
+        })
         size = 7
         generateBoard(size)
     } else {
         gameChoice = 'tic'
+        document.querySelectorAll('.sizer').forEach((e)=>{
+            e.style.display='block'
+        })
         size = 3
         generateBoard(size)
 
