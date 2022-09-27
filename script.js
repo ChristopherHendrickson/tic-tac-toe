@@ -629,6 +629,7 @@ const updatePlayers = (player0,player1) => {
     }
 
     updatePlayerPanels()
+    updateSettings()
 }
 
 const updatePlayerPanels = () => {
@@ -708,10 +709,11 @@ const loadPlayerData = () => {
     const customPlayers = {}
     for (let playerKey in playerDataObject) {
         let loadedPlayer=playerDataObject[playerKey]
-        if (defulatNames.includes(loadedPlayer.name)) { //if the player instance is one of the defaults, just update the necessary properties of the existing default objects (the score record)
+        if (defulatNames.includes(loadedPlayer.name)) { //if the player instance is one of the defaults, just update the necessary properties of the existing default objects (the score record and volume)
             for (i of Player.instances) {
                 if (i.name === loadedPlayer.name) {
                     i.record=loadedPlayer.record
+                    i.volume=loadedPlayer.volume
                 }
             }
         } else {
@@ -757,6 +759,7 @@ const updateSettings = () => {
     timer.duration = currentSettings.timerDuration
     timer.isActive = currentSettings.timerActive
     saveSettingsData(currentSettings)
+    savePlayerData()
 }
 
 
@@ -853,7 +856,7 @@ leftBotSwitch.addEventListener('click',(e)=>{
         const leftPlayer = leftBots[botName]
         updatePlayers(leftPlayer,playersPlaying[1]) //retain Right hand player (players[1])
     } else {
-        updatePlayers(defaultLeft,playersPlaying[1])//ditto below
+        updatePlayers(defaultLeft,playersPlaying[1])
         //add default human player 1
     }
     generateBoard(size)
@@ -866,7 +869,7 @@ rightBotSwitch.addEventListener('click',(e)=>{
         //means we are adding a bot
         const botName = rightBotSelect.value
         const rightPlayer = rightBots[botName]
-        updatePlayers(playersPlaying[0],rightPlayer) //retain Right hand player (players[1])
+        updatePlayers(playersPlaying[0],rightPlayer) //retain left hand player (players[0])
 
     } else {
         updatePlayers(playersPlaying[0],defaultRight)
