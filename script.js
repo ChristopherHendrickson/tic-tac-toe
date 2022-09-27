@@ -149,9 +149,6 @@ const generateBoard = (size=3) => {
 
         for (let col=0;col<size;col++) {
             let node = new Node(row*size+col,row,col)
-            console.log(row)
-            console.log(col)
-            console.log(node)
             let nodeDiv = document.createElement('div')
             nodeList.push(node)
             nodeDiv.classList.add('node')
@@ -499,7 +496,6 @@ const computerMove = () => {
             return 0
         }
         if (countNullNodes(gameState)>initPlayer.difficulty/(gameChoice==='tic' ? 100 : 1)) { //this code is implemented to reduce bot runtimes at large board sizes
-            //depth can be adjusted as a difficulty. bot plays randomly unitl there are 'difficulty' no. of unfilled squres remainng. (i.e 9=full depth in 3x3, 0 = full random)
             let randomChoice = Math.floor(Math.random()*nodeList.length)
             do {
                 randomChoice = Math.floor(Math.random()*nodeList.length)
@@ -512,8 +508,9 @@ const computerMove = () => {
             gameState.forEach((e)=> {
                 memoKey+=e
             })
-            memoKey+=toString(initPlayer)
+            // console.log(initPlayer)
             if (gameChoice === "c4"){
+
                 memoKey+=numMoves //recalculate same states at deeper depths.
             }
             if (!(memoKey in memo)) {
@@ -563,13 +560,13 @@ const computerMove = () => {
 
                 }
             } else {
-
+                memoUse+=1
                 choice = memo[memoKey][0]
                 return memo[memoKey][1]
             }
         }
     }
-
+    let memoUse = 0
     const initGameState = getGameState()
     const initTurnIndex = turnIndex 
     const initPlayer = playersPlaying[turnIndex]
@@ -578,7 +575,11 @@ const computerMove = () => {
     getMove(initGameState,initTurnIndex,0)
     loadGameState(initGameState,initTurnIndex)
     const result = move(playersPlaying[turnIndex],choice)
-
+    if (gameChoice==='c4') {
+        console.log(`Checked ${Object.keys(memo).length} Game States`)
+        console.log(`Memo was used ${memoUse} times`)
+        memo = {} //forget previous memos as they are at a lower depth.
+    }
 
     //move function has now iterated turnInedex to the next player
     //if the next player is also a bot, continue calling computerMove until move returns a game ending result
@@ -595,7 +596,7 @@ const createBots = () => {
     const symbol = 'x'
     const botList = {}
     botList['Philip']=(new Player('Philip',symbol,`img/${symbol}.png`,true,100,1))
-    botList['Laika']=(new Player('Laika',symbol,`img/${symbol}.png`,true,600,2))
+    botList['Laika']=(new Player('Laika',symbol,`img/${symbol}.png`,true,600,3))
     botList['Burke']=(new Player('Burke',symbol,`img/${symbol}.png`,true,1300,6))
     
     const htmlLeftSelect = document.querySelector(`#leftBotList`)
@@ -815,7 +816,7 @@ document.getElementById('decreaseSize').addEventListener('click',(e)=> {
     }
 })
 document.getElementById('increaseSize').addEventListener('click',(e)=> {
-    if (size < 15) {
+    if (size < 8) {
         size +=1
         generateBoard(size)
     }
